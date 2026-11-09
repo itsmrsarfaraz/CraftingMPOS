@@ -498,4 +498,134 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test('Database can create and retrieve a permission', () async {
+    final now = DateTime.now();
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-001',
+        name: 'View Products',
+        slug: 'products.view',
+        module: 'Products',
+        createdAt: now,
+      ),
+    );
+
+    final permissions = await database.getAllPermissions();
+
+    expect(permissions, hasLength(1));
+    expect(permissions.first.id, 'permission-001');
+    expect(permissions.first.name, 'View Products');
+    expect(permissions.first.slug, 'products.view');
+    expect(permissions.first.module, 'Products');
+  });
+
+  test('Database can retrieve permissions by module', () async {
+    final now = DateTime.now();
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-001',
+        name: 'View Products',
+        slug: 'products.view',
+        module: 'Products',
+        createdAt: now,
+      ),
+    );
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-002',
+        name: 'Create Products',
+        slug: 'products.create',
+        module: 'Products',
+        createdAt: now,
+      ),
+    );
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-003',
+        name: 'View Sales',
+        slug: 'sales.view',
+        module: 'Sales',
+        createdAt: now,
+      ),
+    );
+
+    final productPermissions = await database.getPermissionsByModule(
+      'Products',
+    );
+
+    expect(productPermissions, hasLength(2));
+    expect(
+      productPermissions.map((permission) => permission.slug),
+      containsAll(['products.view', 'products.create']),
+    );
+  });
+
+  test(
+    'Database returns an empty list for an unknown permission module',
+    () async {
+      final permissions = await database.getPermissionsByModule('Unknown');
+
+      expect(permissions, isEmpty);
+    },
+  );
+
+  test('Permission slugs must be globally unique', () async {
+    final now = DateTime.now();
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-001',
+        name: 'View Products',
+        slug: 'products.view',
+        module: 'Products',
+        createdAt: now,
+      ),
+    );
+
+    expect(
+      database.createPermission(
+        PermissionsCompanion.insert(
+          id: 'permission-002',
+          name: 'Another View Products',
+          slug: 'products.view',
+          module: 'Products',
+          createdAt: now,
+        ),
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('Permissions from different modules can coexist', () async {
+    final now = DateTime.now();
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-001',
+        name: 'View Products',
+        slug: 'products.view',
+        module: 'Products',
+        createdAt: now,
+      ),
+    );
+
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-002',
+        name: 'View Sales',
+        slug: 'sales.view',
+        module: 'Sales',
+        createdAt: now,
+      ),
+    );
+
+    final permissions = await database.getAllPermissions();
+
+    expect(permissions, hasLength(2));
+  });
 }

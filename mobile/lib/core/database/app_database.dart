@@ -5,16 +5,17 @@ import 'tables/business_settings.dart';
 import 'tables/branches.dart';
 import 'tables/users.dart';
 import 'tables/roles.dart';
+import 'tables/permissions.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [BusinessSettings, Branches, Users, Roles])
+@DriftDatabase(tables: [BusinessSettings, Branches, Users, Roles, Permissions])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -38,6 +39,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 5) {
         await migrator.createTable(roles);
         await migrator.createIndex(rolesBusinessSlugUnique);
+      }
+
+      if (from < 6) {
+        await migrator.createTable(permissions);
+        await migrator.createIndex(permissionsSlugUnique);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -97,5 +103,19 @@ class AppDatabase extends _$AppDatabase {
           (role) => role.businessId.equals(businessId) & role.slug.equals(slug),
         ))
         .getSingleOrNull();
+  }
+
+  Future<int> createPermission(PermissionsCompanion permission) {
+    return into(permissions).insert(permission);
+  }
+
+  Future<List<Permission>> getAllPermissions() {
+    return select(permissions).get();
+  }
+
+  Future<List<Permission>> getPermissionsByModule(String module) {
+    return (select(
+      permissions,
+    )..where((permission) => permission.module.equals(module))).get();
   }
 }
