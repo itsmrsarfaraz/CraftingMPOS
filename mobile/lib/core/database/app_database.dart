@@ -41,7 +41,7 @@ class AppDatabase extends _$AppDatabase {
     return into(branches).insert(branch);
   }
 
-  Future<List<BranchesData>> getBranchesForBusiness(String businessId) {
+  Future<List<Branche>> getBranchesForBusiness(String businessId) {
     return (select(
       branches,
     )..where((branch) => branch.businessId.equals(businessId))).get();
