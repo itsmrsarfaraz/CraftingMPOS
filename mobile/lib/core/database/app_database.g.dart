@@ -1529,6 +1529,582 @@ class UsersCompanion extends UpdateCompanion<User> {
   }
 }
 
+class $RolesTable extends Roles with TableInfo<$RolesTable, Role> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RolesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES business_settings (id)',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 2,
+      maxTextLength: 80,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _slugMeta = const VerificationMeta('slug');
+  @override
+  late final GeneratedColumn<String> slug = GeneratedColumn<String>(
+    'slug',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 2,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isSystemMeta = const VerificationMeta(
+    'isSystem',
+  );
+  @override
+  late final GeneratedColumn<bool> isSystem = GeneratedColumn<bool>(
+    'is_system',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_system" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    slug,
+    description,
+    isSystem,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'roles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Role> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('slug')) {
+      context.handle(
+        _slugMeta,
+        slug.isAcceptableOrUnknown(data['slug']!, _slugMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_slugMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_system')) {
+      context.handle(
+        _isSystemMeta,
+        isSystem.isAcceptableOrUnknown(data['is_system']!, _isSystemMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Role map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Role(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      slug: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slug'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      isSystem: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_system'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RolesTable createAlias(String alias) {
+    return $RolesTable(attachedDatabase, alias);
+  }
+}
+
+class Role extends DataClass implements Insertable<Role> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String slug;
+  final String? description;
+  final bool isSystem;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const Role({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    required this.slug,
+    this.description,
+    required this.isSystem,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    map['slug'] = Variable<String>(slug);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['is_system'] = Variable<bool>(isSystem);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  RolesCompanion toCompanion(bool nullToAbsent) {
+    return RolesCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      slug: Value(slug),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      isSystem: Value(isSystem),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Role.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Role(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      slug: serializer.fromJson<String>(json['slug']),
+      description: serializer.fromJson<String?>(json['description']),
+      isSystem: serializer.fromJson<bool>(json['isSystem']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'slug': serializer.toJson<String>(slug),
+      'description': serializer.toJson<String?>(description),
+      'isSystem': serializer.toJson<bool>(isSystem),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Role copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    String? slug,
+    Value<String?> description = const Value.absent(),
+    bool? isSystem,
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => Role(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    slug: slug ?? this.slug,
+    description: description.present ? description.value : this.description,
+    isSystem: isSystem ?? this.isSystem,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  Role copyWithCompanion(RolesCompanion data) {
+    return Role(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      slug: data.slug.present ? data.slug.value : this.slug,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      isSystem: data.isSystem.present ? data.isSystem.value : this.isSystem,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Role(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('slug: $slug, ')
+          ..write('description: $description, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    slug,
+    description,
+    isSystem,
+    isActive,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Role &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.slug == this.slug &&
+          other.description == this.description &&
+          other.isSystem == this.isSystem &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class RolesCompanion extends UpdateCompanion<Role> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String> slug;
+  final Value<String?> description;
+  final Value<bool> isSystem;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const RolesCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.slug = const Value.absent(),
+    this.description = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RolesCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    required String slug,
+    this.description = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.isActive = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       slug = Value(slug),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Role> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? slug,
+    Expression<String>? description,
+    Expression<bool>? isSystem,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (slug != null) 'slug': slug,
+      if (description != null) 'description': description,
+      if (isSystem != null) 'is_system': isSystem,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RolesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String>? slug,
+    Value<String?>? description,
+    Value<bool>? isSystem,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return RolesCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      slug: slug ?? this.slug,
+      description: description ?? this.description,
+      isSystem: isSystem ?? this.isSystem,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (slug.present) {
+      map['slug'] = Variable<String>(slug.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (isSystem.present) {
+      map['is_system'] = Variable<bool>(isSystem.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RolesCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('slug: $slug, ')
+          ..write('description: $description, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1537,6 +2113,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $BranchesTable branches = $BranchesTable(this);
   late final $UsersTable users = $UsersTable(this);
+  late final $RolesTable roles = $RolesTable(this);
   late final Index branchesBusinessCodeUnique = Index(
     'branches_business_code_unique',
     'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
@@ -1544,6 +2121,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index usersBusinessUsernameUnique = Index(
     'users_business_username_unique',
     'CREATE UNIQUE INDEX users_business_username_unique ON users (business_id, username)',
+  );
+  late final Index rolesBusinessSlugUnique = Index(
+    'roles_business_slug_unique',
+    'CREATE UNIQUE INDEX roles_business_slug_unique ON roles (business_id, slug)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -1553,8 +2134,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     businessSettings,
     branches,
     users,
+    roles,
     branchesBusinessCodeUnique,
     usersBusinessUsernameUnique,
+    rolesBusinessSlugUnique,
   ];
 }
 
@@ -1619,6 +2202,25 @@ final class $$BusinessSettingsTableReferences
     ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_usersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$RolesTable, List<Role>> _rolesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.roles,
+    aliasName: 'business_settings__id__roles__business_id',
+  );
+
+  $$RolesTableProcessedTableManager get rolesRefs {
+    final manager = $$RolesTableTableManager(
+      $_db,
+      $_db.roles,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_rolesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1700,6 +2302,31 @@ class $$BusinessSettingsTableFilterComposer
           }) => $$UsersTableFilterComposer(
             $db: $db,
             $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> rolesRefs(
+    Expression<bool> Function($$RolesTableFilterComposer f) f,
+  ) {
+    final $$RolesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableFilterComposer(
+            $db: $db,
+            $table: $db.roles,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1822,6 +2449,31 @@ class $$BusinessSettingsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> rolesRefs<T extends Object>(
+    Expression<T> Function($$RolesTableAnnotationComposer a) f,
+  ) {
+    final $$RolesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BusinessSettingsTableTableManager
@@ -1837,7 +2489,11 @@ class $$BusinessSettingsTableTableManager
           $$BusinessSettingsTableUpdateCompanionBuilder,
           (BusinessSetting, $$BusinessSettingsTableReferences),
           BusinessSetting,
-          PrefetchHooks Function({bool branchesRefs, bool usersRefs})
+          PrefetchHooks Function({
+            bool branchesRefs,
+            bool usersRefs,
+            bool rolesRefs,
+          })
         > {
   $$BusinessSettingsTableTableManager(
     _$AppDatabase db,
@@ -1892,60 +2548,82 @@ class $$BusinessSettingsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({branchesRefs = false, usersRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (branchesRefs) db.branches,
-                if (usersRefs) db.users,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (branchesRefs)
-                    await $_getPrefetchedDataByColumns<
-                      BusinessSetting,
-                      $BusinessSettingsTable,
-                      Branche,
-                      $BranchesTable
-                    >(
-                      currentTable: table,
-                      referencedTable: $$BusinessSettingsTableReferences
-                          ._branchesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$BusinessSettingsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).branchesRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'business_id',
-                      typedResults: items,
-                    ),
-                  if (usersRefs)
-                    await $_getPrefetchedDataByColumns<
-                      BusinessSetting,
-                      $BusinessSettingsTable,
-                      User,
-                      $UsersTable
-                    >(
-                      currentTable: table,
-                      referencedTable: $$BusinessSettingsTableReferences
-                          ._usersRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$BusinessSettingsTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).usersRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'business_id',
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({branchesRefs = false, usersRefs = false, rolesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (branchesRefs) db.branches,
+                    if (usersRefs) db.users,
+                    if (rolesRefs) db.roles,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (branchesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          BusinessSetting,
+                          $BusinessSettingsTable,
+                          Branche,
+                          $BranchesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessSettingsTableReferences
+                              ._branchesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessSettingsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).branchesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'business_id',
+                          typedResults: items,
+                        ),
+                      if (usersRefs)
+                        await $_getPrefetchedDataByColumns<
+                          BusinessSetting,
+                          $BusinessSettingsTable,
+                          User,
+                          $UsersTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessSettingsTableReferences
+                              ._usersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessSettingsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).usersRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'business_id',
+                          typedResults: items,
+                        ),
+                      if (rolesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          BusinessSetting,
+                          $BusinessSettingsTable,
+                          Role,
+                          $RolesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessSettingsTableReferences
+                              ._rolesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessSettingsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).rolesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'business_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -1962,7 +2640,11 @@ typedef $$BusinessSettingsTableProcessedTableManager =
       $$BusinessSettingsTableUpdateCompanionBuilder,
       (BusinessSetting, $$BusinessSettingsTableReferences),
       BusinessSetting,
-      PrefetchHooks Function({bool branchesRefs, bool usersRefs})
+      PrefetchHooks Function({
+        bool branchesRefs,
+        bool usersRefs,
+        bool rolesRefs,
+      })
     >;
 typedef $$BranchesTableCreateCompanionBuilder = BranchesCompanion Function({
   required String id,
@@ -2747,6 +3429,397 @@ typedef $$UsersTableProcessedTableManager =
       User,
       PrefetchHooks Function({bool businessId})
     >;
+typedef $$RolesTableCreateCompanionBuilder = RolesCompanion Function({
+  required String id,
+  required String businessId,
+  required String name,
+  required String slug,
+  Value<String?> description,
+  Value<bool> isSystem,
+  Value<bool> isActive,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$RolesTableUpdateCompanionBuilder = RolesCompanion Function({
+  Value<String> id,
+  Value<String> businessId,
+  Value<String> name,
+  Value<String> slug,
+  Value<String?> description,
+  Value<bool> isSystem,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$RolesTableReferences
+    extends BaseReferences<_$AppDatabase, $RolesTable, Role> {
+  $$RolesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessSettingsTable _businessIdTable(_$AppDatabase db) => db
+      .businessSettings
+      .createAlias('roles__business_id__business_settings__id');
+
+  $$BusinessSettingsTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessSettingsTableTableManager(
+      $_db,
+      $_db.businessSettings,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RolesTableFilterComposer extends Composer<_$AppDatabase, $RolesTable> {
+  $$RolesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BusinessSettingsTableFilterComposer get businessId {
+    final $$BusinessSettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businessSettings,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessSettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.businessSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RolesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RolesTable> {
+  $$RolesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slug => $composableBuilder(
+    column: $table.slug,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessSettingsTableOrderingComposer get businessId {
+    final $$BusinessSettingsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businessSettings,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessSettingsTableOrderingComposer(
+            $db: $db,
+            $table: $db.businessSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RolesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RolesTable> {
+  $$RolesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get slug =>
+      $composableBuilder(column: $table.slug, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSystem =>
+      $composableBuilder(column: $table.isSystem, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$BusinessSettingsTableAnnotationComposer get businessId {
+    final $$BusinessSettingsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businessSettings,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessSettingsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businessSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RolesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RolesTable,
+          Role,
+          $$RolesTableFilterComposer,
+          $$RolesTableOrderingComposer,
+          $$RolesTableAnnotationComposer,
+          $$RolesTableCreateCompanionBuilder,
+          $$RolesTableUpdateCompanionBuilder,
+          (Role, $$RolesTableReferences),
+          Role,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$RolesTableTableManager(_$AppDatabase db, $RolesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RolesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RolesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RolesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> slug = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RolesCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                slug: slug,
+                description: description,
+                isSystem: isSystem,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                required String slug,
+                Value<String?> description = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RolesCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                slug: slug,
+                description: description,
+                isSystem: isSystem,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RolesTable, Role>(table),
+                  $$RolesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$RolesTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$RolesTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RolesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RolesTable,
+      Role,
+      $$RolesTableFilterComposer,
+      $$RolesTableOrderingComposer,
+      $$RolesTableAnnotationComposer,
+      $$RolesTableCreateCompanionBuilder,
+      $$RolesTableUpdateCompanionBuilder,
+      (Role, $$RolesTableReferences),
+      Role,
+      PrefetchHooks Function({bool businessId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2757,4 +3830,6 @@ class $AppDatabaseManager {
       $$BranchesTableTableManager(_db, _db.branches);
   $$UsersTableTableManager get users =>
       $$UsersTableTableManager(_db, _db.users);
+  $$RolesTableTableManager get roles =>
+      $$RolesTableTableManager(_db, _db.roles);
 }

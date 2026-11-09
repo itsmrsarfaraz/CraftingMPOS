@@ -337,4 +337,165 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test('Database can create and retrieve a role', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Crafting Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-001',
+        businessId: 'business-001',
+        name: 'Store Manager',
+        slug: 'store-manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final role = await database.getRoleBySlug('business-001', 'store-manager');
+
+    expect(role, isNotNull);
+    expect(role!.id, 'role-001');
+    expect(role.name, 'Store Manager');
+    expect(role.slug, 'store-manager');
+    expect(role.isSystem, isFalse);
+    expect(role.isActive, isTrue);
+  });
+
+  test('Roles are isolated between businesses', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'First Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-002',
+        businessName: 'Second Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-001',
+        businessId: 'business-001',
+        name: 'Store Manager',
+        slug: 'manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-002',
+        businessId: 'business-002',
+        name: 'Store Manager',
+        slug: 'manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final firstRole = await database.getRoleBySlug('business-001', 'manager');
+
+    final secondRole = await database.getRoleBySlug('business-002', 'manager');
+
+    expect(firstRole!.id, 'role-001');
+    expect(secondRole!.id, 'role-002');
+  });
+
+  test('Database retrieves roles for a specific business', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Crafting Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-001',
+        businessId: 'business-001',
+        name: 'Store Manager',
+        slug: 'manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-002',
+        businessId: 'business-001',
+        name: 'Cashier',
+        slug: 'cashier',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final roles = await database.getRolesForBusiness('business-001');
+
+    expect(roles, hasLength(2));
+  });
+
+  test('A business cannot have duplicate role slugs', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Crafting Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-001',
+        businessId: 'business-001',
+        name: 'Store Manager',
+        slug: 'manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    expect(
+      database.createRole(
+        RolesCompanion.insert(
+          id: 'role-002',
+          businessId: 'business-001',
+          name: 'Branch Manager',
+          slug: 'manager',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
 }

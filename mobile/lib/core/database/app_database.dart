@@ -4,16 +4,17 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'tables/business_settings.dart';
 import 'tables/branches.dart';
 import 'tables/users.dart';
+import 'tables/roles.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [BusinessSettings, Branches, Users])
+@DriftDatabase(tables: [BusinessSettings, Branches, Users, Roles])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -32,6 +33,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) {
         await migrator.createTable(users);
         await migrator.createIndex(usersBusinessUsernameUnique);
+      }
+
+      if (from < 5) {
+        await migrator.createTable(roles);
+        await migrator.createIndex(rolesBusinessSlugUnique);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -72,6 +78,23 @@ class AppDatabase extends _$AppDatabase {
           (user) =>
               user.businessId.equals(businessId) &
               user.username.equals(username),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<int> createRole(RolesCompanion role) {
+    return into(roles).insert(role);
+  }
+
+  Future<List<Role>> getRolesForBusiness(String businessId) {
+    return (select(
+      roles,
+    )..where((role) => role.businessId.equals(businessId))).get();
+  }
+
+  Future<Role?> getRoleBySlug(String businessId, String slug) {
+    return (select(roles)..where(
+          (role) => role.businessId.equals(businessId) & role.slug.equals(slug),
         ))
         .getSingleOrNull();
   }
