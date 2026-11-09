@@ -6,16 +6,26 @@ import 'tables/branches.dart';
 import 'tables/users.dart';
 import 'tables/roles.dart';
 import 'tables/permissions.dart';
+import 'tables/role_permissions.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [BusinessSettings, Branches, Users, Roles, Permissions])
+@DriftDatabase(
+  tables: [
+    BusinessSettings,
+    Branches,
+    Users,
+    Roles,
+    Permissions,
+    RolePermissions,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +54,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) {
         await migrator.createTable(permissions);
         await migrator.createIndex(permissionsSlugUnique);
+      }
+
+      if (from < 7) {
+        await migrator.createTable(rolePermissions);
+        await migrator.createIndex(rolePermissionsPermissionIdIndex);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -117,5 +132,36 @@ class AppDatabase extends _$AppDatabase {
     return (select(
       permissions,
     )..where((permission) => permission.module.equals(module))).get();
+  }
+
+  Future<int> assignPermissionToRole(RolePermissionsCompanion assignment) {
+    return into(rolePermissions).insert(assignment);
+  }
+
+  Future<List<RolePermission>> getPermissionsForRole(String roleId) {
+    return (select(
+      rolePermissions,
+    )..where((assignment) => assignment.roleId.equals(roleId))).get();
+  }
+
+  Future<int> removePermissionFromRole(String roleId, String permissionId) {
+    return (delete(rolePermissions)..where(
+          (assignment) =>
+              assignment.roleId.equals(roleId) &
+              assignment.permissionId.equals(permissionId),
+        ))
+        .go();
+  }
+
+  Future<bool> roleHasPermission(String roleId, String permissionId) async {
+    final assignment =
+        await (select(rolePermissions)..where(
+              (item) =>
+                  item.roleId.equals(roleId) &
+                  item.permissionId.equals(permissionId),
+            ))
+            .getSingleOrNull();
+
+    return assignment != null;
   }
 }

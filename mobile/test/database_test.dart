@@ -14,6 +14,42 @@ void main() {
     await database.close();
   });
 
+  Future<void> createRoleFixture() async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Test Business',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-001',
+        businessId: 'business-001',
+        name: 'Cashier',
+        slug: 'cashier',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+  }
+
+  Future<void> createPermissionFixture() async {
+    await database.createPermission(
+      PermissionsCompanion.insert(
+        id: 'permission-001',
+        name: 'View Products',
+        slug: 'products.view',
+        module: 'Products',
+        createdAt: DateTime.now(),
+      ),
+    );
+  }
+
   test('Database can save and retrieve business settings', () async {
     final now = DateTime.now();
 
@@ -627,5 +663,109 @@ void main() {
     final permissions = await database.getAllPermissions();
 
     expect(permissions, hasLength(2));
+  });
+
+  test('Permission can be assigned to a role and retrieved', () async {
+    await createRoleFixture();
+    await createPermissionFixture();
+
+    await database.assignPermissionToRole(
+      RolePermissionsCompanion.insert(
+        roleId: 'role-001',
+        permissionId: 'permission-001',
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    final assignments = await database.getPermissionsForRole('role-001');
+
+    expect(assignments, hasLength(1));
+    expect(assignments.first.permissionId, 'permission-001');
+  });
+
+  test('Duplicate permission assignments are rejected', () async {
+    await createRoleFixture();
+    await createPermissionFixture();
+
+    final assignment = RolePermissionsCompanion.insert(
+      roleId: 'role-001',
+      permissionId: 'permission-001',
+      createdAt: DateTime.now(),
+    );
+
+    await database.assignPermissionToRole(assignment);
+
+    expect(
+      database.assignPermissionToRole(assignment),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('Role permission check returns correct results', () async {
+    await createRoleFixture();
+    await createPermissionFixture();
+
+    await database.assignPermissionToRole(
+      RolePermissionsCompanion.insert(
+        roleId: 'role-001',
+        permissionId: 'permission-001',
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    expect(
+      await database.roleHasPermission('role-001', 'permission-001'),
+      isTrue,
+    );
+
+    expect(
+      await database.roleHasPermission('role-001', 'permission-999'),
+      isFalse,
+    );
+  });
+
+  test('Permission can be removed from a role', () async {
+    await createRoleFixture();
+    await createPermissionFixture();
+
+    await database.assignPermissionToRole(
+      RolePermissionsCompanion.insert(
+        roleId: 'role-001',
+        permissionId: 'permission-001',
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    final deletedCount = await database.removePermissionFromRole(
+      'role-001',
+      'permission-001',
+    );
+
+    expect(deletedCount, 1);
+    expect(
+      await database.roleHasPermission('role-001', 'permission-001'),
+      isFalse,
+    );
+  });
+
+  test('Deleting a role cascades to its permission assignments', () async {
+    await createRoleFixture();
+    await createPermissionFixture();
+
+    await database.assignPermissionToRole(
+      RolePermissionsCompanion.insert(
+        roleId: 'role-001',
+        permissionId: 'permission-001',
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    await (database.delete(
+      database.roles,
+    )..where((role) => role.id.equals('role-001'))).go();
+
+    final assignments = await database.getPermissionsForRole('role-001');
+
+    expect(assignments, isEmpty);
   });
 }

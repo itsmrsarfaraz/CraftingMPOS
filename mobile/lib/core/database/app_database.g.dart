@@ -2527,6 +2527,284 @@ class PermissionsCompanion extends UpdateCompanion<Permission> {
   }
 }
 
+class $RolePermissionsTable extends RolePermissions
+    with TableInfo<$RolePermissionsTable, RolePermission> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RolePermissionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _roleIdMeta = const VerificationMeta('roleId');
+  @override
+  late final GeneratedColumn<String> roleId = GeneratedColumn<String>(
+    'role_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES roles (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _permissionIdMeta = const VerificationMeta(
+    'permissionId',
+  );
+  @override
+  late final GeneratedColumn<String> permissionId = GeneratedColumn<String>(
+    'permission_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES permissions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [roleId, permissionId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'role_permissions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RolePermission> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('role_id')) {
+      context.handle(
+        _roleIdMeta,
+        roleId.isAcceptableOrUnknown(data['role_id']!, _roleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roleIdMeta);
+    }
+    if (data.containsKey('permission_id')) {
+      context.handle(
+        _permissionIdMeta,
+        permissionId.isAcceptableOrUnknown(
+          data['permission_id']!,
+          _permissionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_permissionIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {roleId, permissionId};
+  @override
+  RolePermission map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RolePermission(
+      roleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role_id'],
+      )!,
+      permissionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}permission_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RolePermissionsTable createAlias(String alias) {
+    return $RolePermissionsTable(attachedDatabase, alias);
+  }
+}
+
+class RolePermission extends DataClass implements Insertable<RolePermission> {
+  final String roleId;
+  final String permissionId;
+  final DateTime createdAt;
+  const RolePermission({
+    required this.roleId,
+    required this.permissionId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['role_id'] = Variable<String>(roleId);
+    map['permission_id'] = Variable<String>(permissionId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  RolePermissionsCompanion toCompanion(bool nullToAbsent) {
+    return RolePermissionsCompanion(
+      roleId: Value(roleId),
+      permissionId: Value(permissionId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory RolePermission.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RolePermission(
+      roleId: serializer.fromJson<String>(json['roleId']),
+      permissionId: serializer.fromJson<String>(json['permissionId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'roleId': serializer.toJson<String>(roleId),
+      'permissionId': serializer.toJson<String>(permissionId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  RolePermission copyWith({
+    String? roleId,
+    String? permissionId,
+    DateTime? createdAt,
+  }) => RolePermission(
+    roleId: roleId ?? this.roleId,
+    permissionId: permissionId ?? this.permissionId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  RolePermission copyWithCompanion(RolePermissionsCompanion data) {
+    return RolePermission(
+      roleId: data.roleId.present ? data.roleId.value : this.roleId,
+      permissionId: data.permissionId.present
+          ? data.permissionId.value
+          : this.permissionId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RolePermission(')
+          ..write('roleId: $roleId, ')
+          ..write('permissionId: $permissionId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(roleId, permissionId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RolePermission &&
+          other.roleId == this.roleId &&
+          other.permissionId == this.permissionId &&
+          other.createdAt == this.createdAt);
+}
+
+class RolePermissionsCompanion extends UpdateCompanion<RolePermission> {
+  final Value<String> roleId;
+  final Value<String> permissionId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const RolePermissionsCompanion({
+    this.roleId = const Value.absent(),
+    this.permissionId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RolePermissionsCompanion.insert({
+    required String roleId,
+    required String permissionId,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : roleId = Value(roleId),
+       permissionId = Value(permissionId),
+       createdAt = Value(createdAt);
+  static Insertable<RolePermission> custom({
+    Expression<String>? roleId,
+    Expression<String>? permissionId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (roleId != null) 'role_id': roleId,
+      if (permissionId != null) 'permission_id': permissionId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RolePermissionsCompanion copyWith({
+    Value<String>? roleId,
+    Value<String>? permissionId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return RolePermissionsCompanion(
+      roleId: roleId ?? this.roleId,
+      permissionId: permissionId ?? this.permissionId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (roleId.present) {
+      map['role_id'] = Variable<String>(roleId.value);
+    }
+    if (permissionId.present) {
+      map['permission_id'] = Variable<String>(permissionId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RolePermissionsCompanion(')
+          ..write('roleId: $roleId, ')
+          ..write('permissionId: $permissionId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2537,6 +2815,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UsersTable users = $UsersTable(this);
   late final $RolesTable roles = $RolesTable(this);
   late final $PermissionsTable permissions = $PermissionsTable(this);
+  late final $RolePermissionsTable rolePermissions = $RolePermissionsTable(
+    this,
+  );
   late final Index branchesBusinessCodeUnique = Index(
     'branches_business_code_unique',
     'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
@@ -2553,6 +2834,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'permissions_slug_unique',
     'CREATE UNIQUE INDEX permissions_slug_unique ON permissions (slug)',
   );
+  late final Index rolePermissionsPermissionIdIndex = Index(
+    'role_permissions_permission_id_index',
+    'CREATE INDEX role_permissions_permission_id_index ON role_permissions (permission_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2563,11 +2848,30 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     users,
     roles,
     permissions,
+    rolePermissions,
     branchesBusinessCodeUnique,
     usersBusinessUsernameUnique,
     rolesBusinessSlugUnique,
     permissionsSlugUnique,
+    rolePermissionsPermissionIdIndex,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'roles',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('role_permissions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'permissions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('role_permissions', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$BusinessSettingsTableCreateCompanionBuilder =
@@ -3904,6 +4208,26 @@ final class $$RolesTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$RolePermissionsTable, List<RolePermission>>
+  _rolePermissionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.rolePermissions,
+    aliasName: 'roles__id__role_permissions__role_id',
+  );
+
+  $$RolePermissionsTableProcessedTableManager get rolePermissionsRefs {
+    final manager = $$RolePermissionsTableTableManager(
+      $_db,
+      $_db.rolePermissions,
+    ).filter((f) => f.roleId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _rolePermissionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$RolesTableFilterComposer extends Composer<_$AppDatabase, $RolesTable> {
@@ -3975,6 +4299,31 @@ class $$RolesTableFilterComposer extends Composer<_$AppDatabase, $RolesTable> {
           ),
     );
     return composer;
+  }
+
+  Expression<bool> rolePermissionsRefs(
+    Expression<bool> Function($$RolePermissionsTableFilterComposer f) f,
+  ) {
+    final $$RolePermissionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rolePermissions,
+      getReferencedColumn: (t) => t.roleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolePermissionsTableFilterComposer(
+            $db: $db,
+            $table: $db.rolePermissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -4108,6 +4457,31 @@ class $$RolesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> rolePermissionsRefs<T extends Object>(
+    Expression<T> Function($$RolePermissionsTableAnnotationComposer a) f,
+  ) {
+    final $$RolePermissionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rolePermissions,
+      getReferencedColumn: (t) => t.roleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolePermissionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.rolePermissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RolesTableTableManager
@@ -4123,7 +4497,7 @@ class $$RolesTableTableManager
           $$RolesTableUpdateCompanionBuilder,
           (Role, $$RolesTableReferences),
           Role,
-          PrefetchHooks Function({bool businessId})
+          PrefetchHooks Function({bool businessId, bool rolePermissionsRefs})
         > {
   $$RolesTableTableManager(_$AppDatabase db, $RolesTable table)
     : super(
@@ -4192,45 +4566,69 @@ class $$RolesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({businessId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (businessId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.businessId,
-                        referencedTable: $$RolesTableReferences
-                            ._businessIdTable(db),
-                        referencedColumn: $$RolesTableReferences
-                            ._businessIdTable(db)
-                            .id,
-                      ) as T;
-                    }
+          prefetchHooksCallback:
+              ({businessId = false, rolePermissionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (rolePermissionsRefs) db.rolePermissions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (businessId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.businessId,
+                            referencedTable: $$RolesTableReferences
+                                ._businessIdTable(db),
+                            referencedColumn: $$RolesTableReferences
+                                ._businessIdTable(db)
+                                .id,
+                          ) as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (rolePermissionsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          Role,
+                          $RolesTable,
+                          RolePermission,
+                          $RolePermissionsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RolesTableReferences
+                              ._rolePermissionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RolesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).rolePermissionsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'role_id',
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -4247,7 +4645,7 @@ typedef $$RolesTableProcessedTableManager =
       $$RolesTableUpdateCompanionBuilder,
       (Role, $$RolesTableReferences),
       Role,
-      PrefetchHooks Function({bool businessId})
+      PrefetchHooks Function({bool businessId, bool rolePermissionsRefs})
     >;
 typedef $$PermissionsTableCreateCompanionBuilder =
     PermissionsCompanion Function({
@@ -4269,6 +4667,31 @@ typedef $$PermissionsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
+
+final class $$PermissionsTableReferences
+    extends BaseReferences<_$AppDatabase, $PermissionsTable, Permission> {
+  $$PermissionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$RolePermissionsTable, List<RolePermission>>
+  _rolePermissionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.rolePermissions,
+    aliasName: 'permissions__id__role_permissions__permission_id',
+  );
+
+  $$RolePermissionsTableProcessedTableManager get rolePermissionsRefs {
+    final manager = $$RolePermissionsTableTableManager(
+      $_db,
+      $_db.rolePermissions,
+    ).filter((f) => f.permissionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _rolePermissionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$PermissionsTableFilterComposer
     extends Composer<_$AppDatabase, $PermissionsTable> {
@@ -4308,6 +4731,31 @@ class $$PermissionsTableFilterComposer
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> rolePermissionsRefs(
+    Expression<bool> Function($$RolePermissionsTableFilterComposer f) f,
+  ) {
+    final $$RolePermissionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rolePermissions,
+      getReferencedColumn: (t) => t.permissionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolePermissionsTableFilterComposer(
+            $db: $db,
+            $table: $db.rolePermissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PermissionsTableOrderingComposer
@@ -4378,6 +4826,31 @@ class $$PermissionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  Expression<T> rolePermissionsRefs<T extends Object>(
+    Expression<T> Function($$RolePermissionsTableAnnotationComposer a) f,
+  ) {
+    final $$RolePermissionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.rolePermissions,
+      getReferencedColumn: (t) => t.permissionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolePermissionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.rolePermissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PermissionsTableTableManager
@@ -4391,12 +4864,9 @@ class $$PermissionsTableTableManager
           $$PermissionsTableAnnotationComposer,
           $$PermissionsTableCreateCompanionBuilder,
           $$PermissionsTableUpdateCompanionBuilder,
-          (
-            Permission,
-            BaseReferences<_$AppDatabase, $PermissionsTable, Permission>,
-          ),
+          (Permission, $$PermissionsTableReferences),
           Permission,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool rolePermissionsRefs})
         > {
   $$PermissionsTableTableManager(_$AppDatabase db, $PermissionsTable table)
     : super(
@@ -4449,15 +4919,43 @@ class $$PermissionsTableTableManager
               .map(
                 (e) => (
                   e.readTable<$PermissionsTable, Permission>(table),
-                  BaseReferences<_$AppDatabase, $PermissionsTable, Permission>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  $$PermissionsTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({rolePermissionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (rolePermissionsRefs) db.rolePermissions,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (rolePermissionsRefs)
+                    await $_getPrefetchedDataByColumns<
+                      Permission,
+                      $PermissionsTable,
+                      RolePermission,
+                      $RolePermissionsTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PermissionsTableReferences
+                          ._rolePermissionsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$PermissionsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).rolePermissionsRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'permission_id',
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -4472,12 +4970,378 @@ typedef $$PermissionsTableProcessedTableManager =
       $$PermissionsTableAnnotationComposer,
       $$PermissionsTableCreateCompanionBuilder,
       $$PermissionsTableUpdateCompanionBuilder,
-      (
-        Permission,
-        BaseReferences<_$AppDatabase, $PermissionsTable, Permission>,
-      ),
+      (Permission, $$PermissionsTableReferences),
       Permission,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool rolePermissionsRefs})
+    >;
+typedef $$RolePermissionsTableCreateCompanionBuilder =
+    RolePermissionsCompanion Function({
+      required String roleId,
+      required String permissionId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$RolePermissionsTableUpdateCompanionBuilder =
+    RolePermissionsCompanion Function({
+      Value<String> roleId,
+      Value<String> permissionId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$RolePermissionsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $RolePermissionsTable, RolePermission> {
+  $$RolePermissionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $RolesTable _roleIdTable(_$AppDatabase db) =>
+      db.roles.createAlias('role_permissions__role_id__roles__id');
+
+  $$RolesTableProcessedTableManager get roleId {
+    final $_column = $_itemColumn<String>('role_id')!;
+
+    final manager = $$RolesTableTableManager(
+      $_db,
+      $_db.roles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_roleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PermissionsTable _permissionIdTable(_$AppDatabase db) => db
+      .permissions
+      .createAlias('role_permissions__permission_id__permissions__id');
+
+  $$PermissionsTableProcessedTableManager get permissionId {
+    final $_column = $_itemColumn<String>('permission_id')!;
+
+    final manager = $$PermissionsTableTableManager(
+      $_db,
+      $_db.permissions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_permissionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RolePermissionsTableFilterComposer
+    extends Composer<_$AppDatabase, $RolePermissionsTable> {
+  $$RolePermissionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$RolesTableFilterComposer get roleId {
+    final $$RolesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.roleId,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableFilterComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PermissionsTableFilterComposer get permissionId {
+    final $$PermissionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.permissionId,
+      referencedTable: $db.permissions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PermissionsTableFilterComposer(
+            $db: $db,
+            $table: $db.permissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RolePermissionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RolePermissionsTable> {
+  $$RolePermissionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$RolesTableOrderingComposer get roleId {
+    final $$RolesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.roleId,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableOrderingComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PermissionsTableOrderingComposer get permissionId {
+    final $$PermissionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.permissionId,
+      referencedTable: $db.permissions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PermissionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.permissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RolePermissionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RolePermissionsTable> {
+  $$RolePermissionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$RolesTableAnnotationComposer get roleId {
+    final $$RolesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.roleId,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PermissionsTableAnnotationComposer get permissionId {
+    final $$PermissionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.permissionId,
+      referencedTable: $db.permissions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PermissionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.permissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RolePermissionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RolePermissionsTable,
+          RolePermission,
+          $$RolePermissionsTableFilterComposer,
+          $$RolePermissionsTableOrderingComposer,
+          $$RolePermissionsTableAnnotationComposer,
+          $$RolePermissionsTableCreateCompanionBuilder,
+          $$RolePermissionsTableUpdateCompanionBuilder,
+          (RolePermission, $$RolePermissionsTableReferences),
+          RolePermission,
+          PrefetchHooks Function({bool roleId, bool permissionId})
+        > {
+  $$RolePermissionsTableTableManager(
+    _$AppDatabase db,
+    $RolePermissionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RolePermissionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RolePermissionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RolePermissionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> roleId = const Value.absent(),
+                Value<String> permissionId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RolePermissionsCompanion(
+                roleId: roleId,
+                permissionId: permissionId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String roleId,
+                required String permissionId,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RolePermissionsCompanion.insert(
+                roleId: roleId,
+                permissionId: permissionId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RolePermissionsTable, RolePermission>(table),
+                  $$RolePermissionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({roleId = false, permissionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (roleId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.roleId,
+                        referencedTable: $$RolePermissionsTableReferences
+                            ._roleIdTable(db),
+                        referencedColumn: $$RolePermissionsTableReferences
+                            ._roleIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (permissionId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.permissionId,
+                        referencedTable: $$RolePermissionsTableReferences
+                            ._permissionIdTable(db),
+                        referencedColumn: $$RolePermissionsTableReferences
+                            ._permissionIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RolePermissionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RolePermissionsTable,
+      RolePermission,
+      $$RolePermissionsTableFilterComposer,
+      $$RolePermissionsTableOrderingComposer,
+      $$RolePermissionsTableAnnotationComposer,
+      $$RolePermissionsTableCreateCompanionBuilder,
+      $$RolePermissionsTableUpdateCompanionBuilder,
+      (RolePermission, $$RolePermissionsTableReferences),
+      RolePermission,
+      PrefetchHooks Function({bool roleId, bool permissionId})
     >;
 
 class $AppDatabaseManager {
@@ -4493,4 +5357,6 @@ class $AppDatabaseManager {
       $$RolesTableTableManager(_db, _db.roles);
   $$PermissionsTableTableManager get permissions =>
       $$PermissionsTableTableManager(_db, _db.permissions);
+  $$RolePermissionsTableTableManager get rolePermissions =>
+      $$RolePermissionsTableTableManager(_db, _db.rolePermissions);
 }
