@@ -1,0 +1,77 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/native.dart';
+
+import 'package:crafting_mpos/core/database/app_database.dart';
+
+void main() {
+  late AppDatabase database;
+
+  setUp(() {
+    database = AppDatabase(NativeDatabase.memory());
+  });
+
+  tearDown(() async {
+    await database.close();
+  });
+
+  test('Database can save and retrieve business settings', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Crafting Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final businesses = await database.getAllBusinessSettings();
+
+    expect(businesses, hasLength(1));
+    expect(businesses.first.id, 'business-001');
+    expect(businesses.first.businessName, 'Crafting Store');
+    expect(businesses.first.currencyCode, 'PKR');
+  });
+
+  test('A business can have multiple branches', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Crafting Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBranch(
+      BranchesCompanion.insert(
+        id: 'branch-001',
+        businessId: 'business-001',
+        name: 'Main Branch',
+        code: 'MAIN-001',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBranch(
+      BranchesCompanion.insert(
+        id: 'branch-002',
+        businessId: 'business-001',
+        name: 'Second Branch',
+        code: 'BR-002',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final branches = await database.getBranchesForBusiness('business-001');
+
+    expect(branches, hasLength(2));
+    expect(branches[0].businessId, 'business-001');
+    expect(branches[1].businessId, 'business-001');
+  });
+}
