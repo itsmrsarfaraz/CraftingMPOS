@@ -2,6 +2,11 @@ import 'package:drift/drift.dart';
 
 import 'business_settings.dart';
 
+@TableIndex(
+  name: 'branches_business_code_unique',
+  columns: {#businessId, #code},
+  unique: true,
+)
 class Branches extends Table {
   TextColumn get id => text()();
 

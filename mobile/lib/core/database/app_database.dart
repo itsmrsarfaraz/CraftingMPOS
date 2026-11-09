@@ -12,7 +12,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -22,6 +22,10 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (Migrator migrator, int from, int to) async {
       if (from < 2) {
         await migrator.createTable(branches);
+      }
+
+      if (from < 3) {
+        await migrator.createIndex(branchesBusinessCodeUnique);
       }
     },
     beforeOpen: (OpeningDetails details) async {

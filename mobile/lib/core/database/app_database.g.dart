@@ -907,6 +907,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $BranchesTable branches = $BranchesTable(this);
+  late final Index branchesBusinessCodeUnique = Index(
+    'branches_business_code_unique',
+    'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -914,6 +918,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     businessSettings,
     branches,
+    branchesBusinessCodeUnique,
   ];
 }
 

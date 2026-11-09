@@ -74,4 +74,97 @@ void main() {
     expect(branches[0].businessId, 'business-001');
     expect(branches[1].businessId, 'business-001');
   });
+
+  test('A business cannot have duplicate branch codes', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'Crafting Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBranch(
+      BranchesCompanion.insert(
+        id: 'branch-001',
+        businessId: 'business-001',
+        name: 'Main Branch',
+        code: 'MAIN',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    expect(
+      database.createBranch(
+        BranchesCompanion.insert(
+          id: 'branch-002',
+          businessId: 'business-001',
+          name: 'Second Branch',
+          code: 'MAIN',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('Different businesses can reuse the same branch code', () async {
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-001',
+        businessName: 'First Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-002',
+        businessName: 'Second Store',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBranch(
+      BranchesCompanion.insert(
+        id: 'branch-001',
+        businessId: 'business-001',
+        name: 'Main Branch',
+        code: 'MAIN',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createBranch(
+      BranchesCompanion.insert(
+        id: 'branch-002',
+        businessId: 'business-002',
+        name: 'Main Branch',
+        code: 'MAIN',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final firstBusinessBranches = await database.getBranchesForBusiness(
+      'business-001',
+    );
+
+    final secondBusinessBranches = await database.getBranchesForBusiness(
+      'business-002',
+    );
+
+    expect(firstBusinessBranches, hasLength(1));
+    expect(secondBusinessBranches, hasLength(1));
+  });
 }
