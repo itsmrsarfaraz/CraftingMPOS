@@ -50,6 +50,22 @@ void main() {
     );
   }
 
+  Future<void> createUserFixture() async {
+    final now = DateTime.now();
+
+    await database.createUser(
+      UsersCompanion.insert(
+        id: 'user-001',
+        businessId: 'business-001',
+        username: 'cashier01',
+        displayName: 'Test Cashier',
+        passwordHash: 'test-password-hash',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+  }
+
   test('Database can save and retrieve business settings', () async {
     final now = DateTime.now();
 
@@ -767,5 +783,157 @@ void main() {
     final assignments = await database.getPermissionsForRole('role-001');
 
     expect(assignments, isEmpty);
+  });
+
+  test('A user can have multiple roles', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    final now = DateTime.now();
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-002',
+        businessId: 'business-001',
+        name: 'Inventory Manager',
+        slug: 'inventory-manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.assignRoleToUser('user-001', 'role-001');
+    await database.assignRoleToUser('user-001', 'role-002');
+
+    final assignments = await database.getRolesForUser('user-001');
+
+    expect(assignments, hasLength(2));
+  });
+
+  test('Multiple users can have the same role', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    final now = DateTime.now();
+
+    await database.createUser(
+      UsersCompanion.insert(
+        id: 'user-002',
+        businessId: 'business-001',
+        username: 'cashier02',
+        displayName: 'Second Cashier',
+        passwordHash: 'test-password-hash',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.assignRoleToUser('user-001', 'role-001');
+    await database.assignRoleToUser('user-002', 'role-001');
+
+    final users = await database.getUsersForRole('role-001');
+
+    expect(users, hasLength(2));
+    expect(
+      users.map((assignment) => assignment.userId),
+      containsAll(['user-001', 'user-002']),
+    );
+  });
+
+  test('Duplicate role assignments are rejected', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    await database.assignRoleToUser('user-001', 'role-001');
+
+    expect(
+      database.assignRoleToUser('user-001', 'role-001'),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('Users cannot receive roles from another business', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    final now = DateTime.now();
+
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: 'business-002',
+        businessName: 'Another Business',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.createRole(
+      RolesCompanion.insert(
+        id: 'role-002',
+        businessId: 'business-002',
+        name: 'Manager',
+        slug: 'manager',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    expect(
+      database.assignRoleToUser('user-001', 'role-002'),
+      throwsA(isA<StateError>()),
+    );
+
+    final assignments = await database.getRolesForUser('user-001');
+
+    expect(assignments, isEmpty);
+  });
+
+  test('Role assignment can be removed from a user', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    await database.assignRoleToUser('user-001', 'role-001');
+
+    final deletedCount = await database.removeRoleFromUser(
+      'user-001',
+      'role-001',
+    );
+
+    expect(deletedCount, 1);
+    expect(await database.userHasRole('user-001', 'role-001'), isFalse);
+  });
+
+  test('Deleting a user or role cascades to role assignments', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    final now = DateTime.now();
+
+    await database.createUser(
+      UsersCompanion.insert(
+        id: 'user-002',
+        businessId: 'business-001',
+        username: 'cashier02',
+        displayName: 'Second Cashier',
+        passwordHash: 'test-password-hash',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    await database.assignRoleToUser('user-001', 'role-001');
+    await database.assignRoleToUser('user-002', 'role-001');
+
+    await (database.delete(
+      database.users,
+    )..where((user) => user.id.equals('user-001'))).go();
+
+    expect(await database.getUsersForRole('role-001'), hasLength(1));
+
+    await (database.delete(
+      database.roles,
+    )..where((role) => role.id.equals('role-001'))).go();
+
+    expect(await database.getUsersForRole('role-001'), isEmpty);
   });
 }

@@ -7,6 +7,7 @@ import 'tables/users.dart';
 import 'tables/roles.dart';
 import 'tables/permissions.dart';
 import 'tables/role_permissions.dart';
+import 'tables/user_roles.dart';
 
 part 'app_database.g.dart';
 
@@ -18,6 +19,7 @@ part 'app_database.g.dart';
     Roles,
     Permissions,
     RolePermissions,
+    UserRoles,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -25,7 +27,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -59,6 +61,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) {
         await migrator.createTable(rolePermissions);
         await migrator.createIndex(rolePermissionsPermissionIdIndex);
+      }
+
+      if (from < 8) {
+        await migrator.createTable(userRoles);
+        await migrator.createIndex(userRolesRoleIdIndex);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -159,6 +166,69 @@ class AppDatabase extends _$AppDatabase {
               (item) =>
                   item.roleId.equals(roleId) &
                   item.permissionId.equals(permissionId),
+            ))
+            .getSingleOrNull();
+
+    return assignment != null;
+  }
+
+  Future<int> assignRoleToUser(String userId, String roleId) {
+    return transaction(() async {
+      final user = await (select(
+        users,
+      )..where((item) => item.id.equals(userId))).getSingleOrNull();
+
+      final role = await (select(
+        roles,
+      )..where((item) => item.id.equals(roleId))).getSingleOrNull();
+
+      if (user == null) {
+        throw StateError('User does not exist.');
+      }
+
+      if (role == null) {
+        throw StateError('Role does not exist.');
+      }
+
+      if (user.businessId != role.businessId) {
+        throw StateError('Cannot assign a role from another business.');
+      }
+
+      return into(userRoles).insert(
+        UserRolesCompanion.insert(
+          userId: userId,
+          roleId: roleId,
+          createdAt: DateTime.now(),
+        ),
+      );
+    });
+  }
+
+  Future<List<UserRole>> getRolesForUser(String userId) {
+    return (select(
+      userRoles,
+    )..where((assignment) => assignment.userId.equals(userId))).get();
+  }
+
+  Future<List<UserRole>> getUsersForRole(String roleId) {
+    return (select(
+      userRoles,
+    )..where((assignment) => assignment.roleId.equals(roleId))).get();
+  }
+
+  Future<int> removeRoleFromUser(String userId, String roleId) {
+    return (delete(userRoles)..where(
+          (assignment) =>
+              assignment.userId.equals(userId) &
+              assignment.roleId.equals(roleId),
+        ))
+        .go();
+  }
+
+  Future<bool> userHasRole(String userId, String roleId) async {
+    final assignment =
+        await (select(userRoles)..where(
+              (item) => item.userId.equals(userId) & item.roleId.equals(roleId),
             ))
             .getSingleOrNull();
 

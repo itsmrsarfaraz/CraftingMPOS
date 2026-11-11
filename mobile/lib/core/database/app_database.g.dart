@@ -2805,6 +2805,274 @@ class RolePermissionsCompanion extends UpdateCompanion<RolePermission> {
   }
 }
 
+class $UserRolesTable extends UserRoles
+    with TableInfo<$UserRolesTable, UserRole> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserRolesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES users (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _roleIdMeta = const VerificationMeta('roleId');
+  @override
+  late final GeneratedColumn<String> roleId = GeneratedColumn<String>(
+    'role_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES roles (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [userId, roleId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_roles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserRole> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('role_id')) {
+      context.handle(
+        _roleIdMeta,
+        roleId.isAcceptableOrUnknown(data['role_id']!, _roleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_roleIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId, roleId};
+  @override
+  UserRole map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserRole(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      roleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UserRolesTable createAlias(String alias) {
+    return $UserRolesTable(attachedDatabase, alias);
+  }
+}
+
+class UserRole extends DataClass implements Insertable<UserRole> {
+  final String userId;
+  final String roleId;
+  final DateTime createdAt;
+  const UserRole({
+    required this.userId,
+    required this.roleId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['role_id'] = Variable<String>(roleId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UserRolesCompanion toCompanion(bool nullToAbsent) {
+    return UserRolesCompanion(
+      userId: Value(userId),
+      roleId: Value(roleId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory UserRole.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserRole(
+      userId: serializer.fromJson<String>(json['userId']),
+      roleId: serializer.fromJson<String>(json['roleId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'roleId': serializer.toJson<String>(roleId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  UserRole copyWith({String? userId, String? roleId, DateTime? createdAt}) =>
+      UserRole(
+        userId: userId ?? this.userId,
+        roleId: roleId ?? this.roleId,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  UserRole copyWithCompanion(UserRolesCompanion data) {
+    return UserRole(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      roleId: data.roleId.present ? data.roleId.value : this.roleId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserRole(')
+          ..write('userId: $userId, ')
+          ..write('roleId: $roleId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(userId, roleId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserRole &&
+          other.userId == this.userId &&
+          other.roleId == this.roleId &&
+          other.createdAt == this.createdAt);
+}
+
+class UserRolesCompanion extends UpdateCompanion<UserRole> {
+  final Value<String> userId;
+  final Value<String> roleId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const UserRolesCompanion({
+    this.userId = const Value.absent(),
+    this.roleId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserRolesCompanion.insert({
+    required String userId,
+    required String roleId,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       roleId = Value(roleId),
+       createdAt = Value(createdAt);
+  static Insertable<UserRole> custom({
+    Expression<String>? userId,
+    Expression<String>? roleId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (roleId != null) 'role_id': roleId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserRolesCompanion copyWith({
+    Value<String>? userId,
+    Value<String>? roleId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return UserRolesCompanion(
+      userId: userId ?? this.userId,
+      roleId: roleId ?? this.roleId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (roleId.present) {
+      map['role_id'] = Variable<String>(roleId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserRolesCompanion(')
+          ..write('userId: $userId, ')
+          ..write('roleId: $roleId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2818,6 +3086,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RolePermissionsTable rolePermissions = $RolePermissionsTable(
     this,
   );
+  late final $UserRolesTable userRoles = $UserRolesTable(this);
   late final Index branchesBusinessCodeUnique = Index(
     'branches_business_code_unique',
     'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
@@ -2838,6 +3107,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'role_permissions_permission_id_index',
     'CREATE INDEX role_permissions_permission_id_index ON role_permissions (permission_id)',
   );
+  late final Index userRolesRoleIdIndex = Index(
+    'user_roles_role_id_index',
+    'CREATE INDEX user_roles_role_id_index ON user_roles (role_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2849,11 +3122,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     roles,
     permissions,
     rolePermissions,
+    userRoles,
     branchesBusinessCodeUnique,
     usersBusinessUsernameUnique,
     rolesBusinessSlugUnique,
     permissionsSlugUnique,
     rolePermissionsPermissionIdIndex,
+    userRolesRoleIdIndex,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2870,6 +3145,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('role_permissions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'users',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('user_roles', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'roles',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('user_roles', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3798,6 +4087,24 @@ final class $$UsersTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$UserRolesTable, List<UserRole>>
+  _userRolesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.userRoles,
+    aliasName: 'users__id__user_roles__user_id',
+  );
+
+  $$UserRolesTableProcessedTableManager get userRolesRefs {
+    final manager = $$UserRolesTableTableManager(
+      $_db,
+      $_db.userRoles,
+    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_userRolesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
@@ -3874,6 +4181,31 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
           ),
     );
     return composer;
+  }
+
+  Expression<bool> userRolesRefs(
+    Expression<bool> Function($$UserRolesTableFilterComposer f) f,
+  ) {
+    final $$UserRolesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userRoles,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserRolesTableFilterComposer(
+            $db: $db,
+            $table: $db.userRoles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -4017,6 +4349,31 @@ class $$UsersTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> userRolesRefs<T extends Object>(
+    Expression<T> Function($$UserRolesTableAnnotationComposer a) f,
+  ) {
+    final $$UserRolesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userRoles,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserRolesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.userRoles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$UsersTableTableManager
@@ -4032,7 +4389,7 @@ class $$UsersTableTableManager
           $$UsersTableUpdateCompanionBuilder,
           (User, $$UsersTableReferences),
           User,
-          PrefetchHooks Function({bool businessId})
+          PrefetchHooks Function({bool businessId, bool userRolesRefs})
         > {
   $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
     : super(
@@ -4105,10 +4462,10 @@ class $$UsersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({businessId = false}) {
+          prefetchHooksCallback: ({businessId = false, userRolesRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [if (userRolesRefs) db.userRoles],
               addJoins:
                   <
                     T extends TableManagerState<
@@ -4140,7 +4497,24 @@ class $$UsersTableTableManager
                     return state;
                   },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (userRolesRefs)
+                    await $_getPrefetchedDataByColumns<
+                      User,
+                      $UsersTable,
+                      UserRole,
+                      $UserRolesTable
+                    >(
+                      currentTable: table,
+                      referencedTable: $$UsersTableReferences
+                          ._userRolesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$UsersTableReferences(db, table, p0).userRolesRefs,
+                      currentColumn: 'id',
+                      referencedColumn: 'user_id',
+                      typedResults: items,
+                    ),
+                ];
               },
             );
           },
@@ -4160,7 +4534,7 @@ typedef $$UsersTableProcessedTableManager =
       $$UsersTableUpdateCompanionBuilder,
       (User, $$UsersTableReferences),
       User,
-      PrefetchHooks Function({bool businessId})
+      PrefetchHooks Function({bool businessId, bool userRolesRefs})
     >;
 typedef $$RolesTableCreateCompanionBuilder = RolesCompanion Function({
   required String id,
@@ -4224,6 +4598,24 @@ final class $$RolesTableReferences
     final cache = $_typedResult.readTableOrNull(
       _rolePermissionsRefsTable($_db),
     );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$UserRolesTable, List<UserRole>>
+  _userRolesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.userRoles,
+    aliasName: 'roles__id__user_roles__role_id',
+  );
+
+  $$UserRolesTableProcessedTableManager get userRolesRefs {
+    final manager = $$UserRolesTableTableManager(
+      $_db,
+      $_db.userRoles,
+    ).filter((f) => f.roleId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_userRolesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4317,6 +4709,31 @@ class $$RolesTableFilterComposer extends Composer<_$AppDatabase, $RolesTable> {
           }) => $$RolePermissionsTableFilterComposer(
             $db: $db,
             $table: $db.rolePermissions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> userRolesRefs(
+    Expression<bool> Function($$UserRolesTableFilterComposer f) f,
+  ) {
+    final $$UserRolesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userRoles,
+      getReferencedColumn: (t) => t.roleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserRolesTableFilterComposer(
+            $db: $db,
+            $table: $db.userRoles,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4482,6 +4899,31 @@ class $$RolesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> userRolesRefs<T extends Object>(
+    Expression<T> Function($$UserRolesTableAnnotationComposer a) f,
+  ) {
+    final $$UserRolesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userRoles,
+      getReferencedColumn: (t) => t.roleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserRolesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.userRoles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RolesTableTableManager
@@ -4497,7 +4939,11 @@ class $$RolesTableTableManager
           $$RolesTableUpdateCompanionBuilder,
           (Role, $$RolesTableReferences),
           Role,
-          PrefetchHooks Function({bool businessId, bool rolePermissionsRefs})
+          PrefetchHooks Function({
+            bool businessId,
+            bool rolePermissionsRefs,
+            bool userRolesRefs,
+          })
         > {
   $$RolesTableTableManager(_$AppDatabase db, $RolesTable table)
     : super(
@@ -4567,11 +5013,16 @@ class $$RolesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({businessId = false, rolePermissionsRefs = false}) {
+              ({
+                businessId = false,
+                rolePermissionsRefs = false,
+                userRolesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (rolePermissionsRefs) db.rolePermissions,
+                    if (userRolesRefs) db.userRoles,
                   ],
                   addJoins:
                       <
@@ -4625,6 +5076,26 @@ class $$RolesTableTableManager
                           referencedColumn: 'role_id',
                           typedResults: items,
                         ),
+                      if (userRolesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          Role,
+                          $RolesTable,
+                          UserRole,
+                          $UserRolesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RolesTableReferences
+                              ._userRolesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RolesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userRolesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'role_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -4645,7 +5116,11 @@ typedef $$RolesTableProcessedTableManager =
       $$RolesTableUpdateCompanionBuilder,
       (Role, $$RolesTableReferences),
       Role,
-      PrefetchHooks Function({bool businessId, bool rolePermissionsRefs})
+      PrefetchHooks Function({
+        bool businessId,
+        bool rolePermissionsRefs,
+        bool userRolesRefs,
+      })
     >;
 typedef $$PermissionsTableCreateCompanionBuilder =
     PermissionsCompanion Function({
@@ -5343,6 +5818,365 @@ typedef $$RolePermissionsTableProcessedTableManager =
       RolePermission,
       PrefetchHooks Function({bool roleId, bool permissionId})
     >;
+typedef $$UserRolesTableCreateCompanionBuilder = UserRolesCompanion Function({
+  required String userId,
+  required String roleId,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$UserRolesTableUpdateCompanionBuilder = UserRolesCompanion Function({
+  Value<String> userId,
+  Value<String> roleId,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+final class $$UserRolesTableReferences
+    extends BaseReferences<_$AppDatabase, $UserRolesTable, UserRole> {
+  $$UserRolesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UsersTable _userIdTable(_$AppDatabase db) =>
+      db.users.createAlias('user_roles__user_id__users__id');
+
+  $$UsersTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<String>('user_id')!;
+
+    final manager = $$UsersTableTableManager(
+      $_db,
+      $_db.users,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RolesTable _roleIdTable(_$AppDatabase db) =>
+      db.roles.createAlias('user_roles__role_id__roles__id');
+
+  $$RolesTableProcessedTableManager get roleId {
+    final $_column = $_itemColumn<String>('role_id')!;
+
+    final manager = $$RolesTableTableManager(
+      $_db,
+      $_db.roles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_roleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserRolesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserRolesTable> {
+  $$UserRolesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UsersTableFilterComposer get userId {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableFilterComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RolesTableFilterComposer get roleId {
+    final $$RolesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.roleId,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableFilterComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserRolesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserRolesTable> {
+  $$UserRolesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$UsersTableOrderingComposer get userId {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RolesTableOrderingComposer get roleId {
+    final $$RolesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.roleId,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableOrderingComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserRolesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserRolesTable> {
+  $$UserRolesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$UsersTableAnnotationComposer get userId {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RolesTableAnnotationComposer get roleId {
+    final $$RolesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.roleId,
+      referencedTable: $db.roles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RolesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserRolesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserRolesTable,
+          UserRole,
+          $$UserRolesTableFilterComposer,
+          $$UserRolesTableOrderingComposer,
+          $$UserRolesTableAnnotationComposer,
+          $$UserRolesTableCreateCompanionBuilder,
+          $$UserRolesTableUpdateCompanionBuilder,
+          (UserRole, $$UserRolesTableReferences),
+          UserRole,
+          PrefetchHooks Function({bool userId, bool roleId})
+        > {
+  $$UserRolesTableTableManager(_$AppDatabase db, $UserRolesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserRolesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserRolesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserRolesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<String> roleId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserRolesCompanion(
+                userId: userId,
+                roleId: roleId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required String roleId,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => UserRolesCompanion.insert(
+                userId: userId,
+                roleId: roleId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$UserRolesTable, UserRole>(table),
+                  $$UserRolesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({userId = false, roleId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (userId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.userId,
+                        referencedTable: $$UserRolesTableReferences
+                            ._userIdTable(db),
+                        referencedColumn: $$UserRolesTableReferences
+                            ._userIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (roleId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.roleId,
+                        referencedTable: $$UserRolesTableReferences
+                            ._roleIdTable(db),
+                        referencedColumn: $$UserRolesTableReferences
+                            ._roleIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserRolesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserRolesTable,
+      UserRole,
+      $$UserRolesTableFilterComposer,
+      $$UserRolesTableOrderingComposer,
+      $$UserRolesTableAnnotationComposer,
+      $$UserRolesTableCreateCompanionBuilder,
+      $$UserRolesTableUpdateCompanionBuilder,
+      (UserRole, $$UserRolesTableReferences),
+      UserRole,
+      PrefetchHooks Function({bool userId, bool roleId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5359,4 +6193,6 @@ class $AppDatabaseManager {
       $$PermissionsTableTableManager(_db, _db.permissions);
   $$RolePermissionsTableTableManager get rolePermissions =>
       $$RolePermissionsTableTableManager(_db, _db.rolePermissions);
+  $$UserRolesTableTableManager get userRoles =>
+      $$UserRolesTableTableManager(_db, _db.userRoles);
 }
