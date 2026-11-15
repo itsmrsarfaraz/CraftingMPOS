@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 
 import 'package:crafting_mpos/core/database/app_database.dart';
@@ -105,6 +106,33 @@ void main() {
         deviceIdentifier: deviceIdentifier,
         publicKey: 'test-public-key-$deviceId',
         registeredAt: DateTime.now(),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<void> createCategoryFixture({
+    String businessId = 'business-001',
+    String categoryId = 'category-001',
+    String name = 'Beverages',
+    String? description = 'Drinks and beverages',
+  }) async {
+    await database.createBusinessSettings(
+      BusinessSettingsCompanion.insert(
+        id: businessId,
+        businessName: 'Test Business',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    await database.createCategory(
+      CategoriesCompanion.insert(
+        id: categoryId,
+        businessId: businessId,
+        name: name,
+        description: Value(description),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -1273,7 +1301,16 @@ void main() {
           .customSelect('PRAGMA user_version')
           .getSingle();
 
-      expect(versionResult.read<int>('user_version'), 11);
+      expect(versionResult.read<int>('user_version'), 12);
+
+      final categoriesResult = await legacyDatabase.customSelect('''
+  SELECT name
+  FROM sqlite_master
+  WHERE type = 'table'
+    AND name = 'categories'
+''').get();
+
+      expect(categoriesResult, hasLength(1));
 
       final triggerResult = await legacyDatabase.customSelect('''
   SELECT name
@@ -1340,4 +1377,85 @@ void main() {
       }
     },
   );
+
+  group('Category Management', () {
+    test('Create and retrieve a category', () async {
+      await createCategoryFixture();
+
+      final category = await database.getCategoryById(
+        'business-001',
+        'category-001',
+      );
+
+      expect(category, isNotNull);
+      expect(category!.name, 'Beverages');
+      expect(category.description, 'Drinks and beverages');
+      expect(category.isActive, isTrue);
+    });
+
+    test('Retrieve categories for a business', () async {
+      await createCategoryFixture();
+
+      await database.createCategory(
+        CategoriesCompanion.insert(
+          id: 'category-002',
+          businessId: 'business-001',
+          name: 'Groceries',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      final categories = await database.getCategoriesForBusiness(
+        'business-001',
+      );
+
+      expect(categories, hasLength(2));
+      expect(categories.map((category) => category.name).toList(), [
+        'Beverages',
+        'Groceries',
+      ]);
+    });
+
+    test('Categories are isolated between businesses', () async {
+      await createCategoryFixture();
+
+      await createCategoryFixture(
+        businessId: 'business-002',
+        categoryId: 'category-002',
+        name: 'Electronics',
+      );
+
+      final categories = await database.getCategoriesForBusiness(
+        'business-001',
+      );
+
+      expect(categories, hasLength(1));
+      expect(categories.first.name, 'Beverages');
+
+      final otherBusinessCategory = await database.getCategoryById(
+        'business-001',
+        'category-002',
+      );
+
+      expect(otherBusinessCategory, isNull);
+    });
+
+    test('Duplicate category names within a business are rejected', () async {
+      await createCategoryFixture();
+
+      expect(
+        () => database.createCategory(
+          CategoriesCompanion.insert(
+            id: 'category-002',
+            businessId: 'business-001',
+            name: 'Beverages',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
 }

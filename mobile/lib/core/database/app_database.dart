@@ -10,6 +10,7 @@ import 'tables/role_permissions.dart';
 import 'tables/user_roles.dart';
 import 'tables/user_branches.dart';
 import 'tables/devices.dart';
+import 'tables/categories.dart';
 
 part 'app_database.g.dart';
 
@@ -24,6 +25,7 @@ part 'app_database.g.dart';
     UserRoles,
     UserBranches,
     Devices,
+    Categories,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -31,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -84,14 +86,19 @@ class AppDatabase extends _$AppDatabase {
 
       if (from < 11) {
         await customStatement('''
-    CREATE TRIGGER IF NOT EXISTS business_delete_roles_cascade
-    BEFORE DELETE ON business_settings
-    FOR EACH ROW
-    BEGIN
-      DELETE FROM roles
-      WHERE business_id = OLD.id;
-    END;
-  ''');
+            CREATE TRIGGER IF NOT EXISTS business_delete_roles_cascade
+            BEFORE DELETE ON business_settings
+            FOR EACH ROW
+            BEGIN
+              DELETE FROM roles
+              WHERE business_id = OLD.id;
+            END;
+          ''');
+      }
+
+      if (from < 12) {
+        await migrator.createTable(categories);
+        await migrator.createIndex(categoriesBusinessNameUnique);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -365,5 +372,61 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
+  }
+
+  // Category Management
+
+  Future<int> createCategory(CategoriesCompanion category) {
+    return into(categories).insert(category);
+  }
+
+  Future<List<Category>> getCategoriesForBusiness(String businessId) {
+    return (select(categories)
+          ..where((category) => category.businessId.equals(businessId))
+          ..orderBy([(category) => OrderingTerm.asc(category.name)]))
+        .get();
+  }
+
+  Future<Category?> getCategoryById(String businessId, String categoryId) {
+    return (select(categories)..where(
+          (category) =>
+              category.businessId.equals(businessId) &
+              category.id.equals(categoryId),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<int> updateCategory(
+    String businessId,
+    String categoryId,
+    CategoriesCompanion changes,
+  ) {
+    return (update(categories)..where(
+          (category) =>
+              category.businessId.equals(businessId) &
+              category.id.equals(categoryId),
+        ))
+        .write(changes.copyWith(updatedAt: Value(DateTime.now())));
+  }
+
+  Future<int> setCategoryActive(
+    String businessId,
+    String categoryId,
+    bool isActive,
+  ) {
+    return updateCategory(
+      businessId,
+      categoryId,
+      CategoriesCompanion(isActive: Value(isActive)),
+    );
+  }
+
+  Future<int> deleteCategory(String businessId, String categoryId) {
+    return (delete(categories)..where(
+          (category) =>
+              category.businessId.equals(businessId) &
+              category.id.equals(categoryId),
+        ))
+        .go();
   }
 }
