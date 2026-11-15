@@ -6740,6 +6740,814 @@ class BranchStocksCompanion extends UpdateCompanion<BranchStock> {
   }
 }
 
+class $StockMovementsTable extends StockMovements
+    with TableInfo<$StockMovementsTable, StockMovement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StockMovementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _variantIdMeta = const VerificationMeta(
+    'variantId',
+  );
+  @override
+  late final GeneratedColumn<String> variantId = GeneratedColumn<String>(
+    'variant_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _movementTypeMeta = const VerificationMeta(
+    'movementType',
+  );
+  @override
+  late final GeneratedColumn<String> movementType = GeneratedColumn<String>(
+    'movement_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityDeltaMilliunitsMeta =
+      const VerificationMeta('quantityDeltaMilliunits');
+  @override
+  late final GeneratedColumn<int> quantityDeltaMilliunits =
+      GeneratedColumn<int>(
+        'quantity_delta_milliunits',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _unitCostPaisaMeta = const VerificationMeta(
+    'unitCostPaisa',
+  );
+  @override
+  late final GeneratedColumn<int> unitCostPaisa = GeneratedColumn<int>(
+    'unit_cost_paisa',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceTypeMeta = const VerificationMeta(
+    'referenceType',
+  );
+  @override
+  late final GeneratedColumn<String> referenceType = GeneratedColumn<String>(
+    'reference_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _referenceIdMeta = const VerificationMeta(
+    'referenceId',
+  );
+  @override
+  late final GeneratedColumn<String> referenceId = GeneratedColumn<String>(
+    'reference_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _transferGroupIdMeta = const VerificationMeta(
+    'transferGroupId',
+  );
+  @override
+  late final GeneratedColumn<String> transferGroupId = GeneratedColumn<String>(
+    'transfer_group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByUserIdMeta = const VerificationMeta(
+    'createdByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> createdByUserId = GeneratedColumn<String>(
+    'created_by_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    branchId,
+    variantId,
+    movementType,
+    quantityDeltaMilliunits,
+    unitCostPaisa,
+    referenceType,
+    referenceId,
+    transferGroupId,
+    note,
+    createdByUserId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stock_movements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StockMovement> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('variant_id')) {
+      context.handle(
+        _variantIdMeta,
+        variantId.isAcceptableOrUnknown(data['variant_id']!, _variantIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_variantIdMeta);
+    }
+    if (data.containsKey('movement_type')) {
+      context.handle(
+        _movementTypeMeta,
+        movementType.isAcceptableOrUnknown(
+          data['movement_type']!,
+          _movementTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_movementTypeMeta);
+    }
+    if (data.containsKey('quantity_delta_milliunits')) {
+      context.handle(
+        _quantityDeltaMilliunitsMeta,
+        quantityDeltaMilliunits.isAcceptableOrUnknown(
+          data['quantity_delta_milliunits']!,
+          _quantityDeltaMilliunitsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityDeltaMilliunitsMeta);
+    }
+    if (data.containsKey('unit_cost_paisa')) {
+      context.handle(
+        _unitCostPaisaMeta,
+        unitCostPaisa.isAcceptableOrUnknown(
+          data['unit_cost_paisa']!,
+          _unitCostPaisaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_type')) {
+      context.handle(
+        _referenceTypeMeta,
+        referenceType.isAcceptableOrUnknown(
+          data['reference_type']!,
+          _referenceTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reference_id')) {
+      context.handle(
+        _referenceIdMeta,
+        referenceId.isAcceptableOrUnknown(
+          data['reference_id']!,
+          _referenceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('transfer_group_id')) {
+      context.handle(
+        _transferGroupIdMeta,
+        transferGroupId.isAcceptableOrUnknown(
+          data['transfer_group_id']!,
+          _transferGroupIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_by_user_id')) {
+      context.handle(
+        _createdByUserIdMeta,
+        createdByUserId.isAcceptableOrUnknown(
+          data['created_by_user_id']!,
+          _createdByUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StockMovement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StockMovement(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      variantId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}variant_id'],
+      )!,
+      movementType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}movement_type'],
+      )!,
+      quantityDeltaMilliunits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity_delta_milliunits'],
+      )!,
+      unitCostPaisa: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unit_cost_paisa'],
+      ),
+      referenceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_type'],
+      ),
+      referenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_id'],
+      ),
+      transferGroupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transfer_group_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by_user_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StockMovementsTable createAlias(String alias) {
+    return $StockMovementsTable(attachedDatabase, alias);
+  }
+}
+
+class StockMovement extends DataClass implements Insertable<StockMovement> {
+  final String id;
+  final String businessId;
+  final String branchId;
+  final String variantId;
+  final String movementType;
+  final int quantityDeltaMilliunits;
+  final int? unitCostPaisa;
+  final String? referenceType;
+  final String? referenceId;
+  final String? transferGroupId;
+  final String? note;
+  final String? createdByUserId;
+  final DateTime createdAt;
+  const StockMovement({
+    required this.id,
+    required this.businessId,
+    required this.branchId,
+    required this.variantId,
+    required this.movementType,
+    required this.quantityDeltaMilliunits,
+    this.unitCostPaisa,
+    this.referenceType,
+    this.referenceId,
+    this.transferGroupId,
+    this.note,
+    this.createdByUserId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['variant_id'] = Variable<String>(variantId);
+    map['movement_type'] = Variable<String>(movementType);
+    map['quantity_delta_milliunits'] = Variable<int>(quantityDeltaMilliunits);
+    if (!nullToAbsent || unitCostPaisa != null) {
+      map['unit_cost_paisa'] = Variable<int>(unitCostPaisa);
+    }
+    if (!nullToAbsent || referenceType != null) {
+      map['reference_type'] = Variable<String>(referenceType);
+    }
+    if (!nullToAbsent || referenceId != null) {
+      map['reference_id'] = Variable<String>(referenceId);
+    }
+    if (!nullToAbsent || transferGroupId != null) {
+      map['transfer_group_id'] = Variable<String>(transferGroupId);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || createdByUserId != null) {
+      map['created_by_user_id'] = Variable<String>(createdByUserId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  StockMovementsCompanion toCompanion(bool nullToAbsent) {
+    return StockMovementsCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      branchId: Value(branchId),
+      variantId: Value(variantId),
+      movementType: Value(movementType),
+      quantityDeltaMilliunits: Value(quantityDeltaMilliunits),
+      unitCostPaisa: unitCostPaisa == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitCostPaisa),
+      referenceType: referenceType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceType),
+      referenceId: referenceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceId),
+      transferGroupId: transferGroupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transferGroupId),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdByUserId: createdByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdByUserId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory StockMovement.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StockMovement(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      variantId: serializer.fromJson<String>(json['variantId']),
+      movementType: serializer.fromJson<String>(json['movementType']),
+      quantityDeltaMilliunits: serializer.fromJson<int>(
+        json['quantityDeltaMilliunits'],
+      ),
+      unitCostPaisa: serializer.fromJson<int?>(json['unitCostPaisa']),
+      referenceType: serializer.fromJson<String?>(json['referenceType']),
+      referenceId: serializer.fromJson<String?>(json['referenceId']),
+      transferGroupId: serializer.fromJson<String?>(json['transferGroupId']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdByUserId: serializer.fromJson<String?>(json['createdByUserId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'branchId': serializer.toJson<String>(branchId),
+      'variantId': serializer.toJson<String>(variantId),
+      'movementType': serializer.toJson<String>(movementType),
+      'quantityDeltaMilliunits': serializer.toJson<int>(
+        quantityDeltaMilliunits,
+      ),
+      'unitCostPaisa': serializer.toJson<int?>(unitCostPaisa),
+      'referenceType': serializer.toJson<String?>(referenceType),
+      'referenceId': serializer.toJson<String?>(referenceId),
+      'transferGroupId': serializer.toJson<String?>(transferGroupId),
+      'note': serializer.toJson<String?>(note),
+      'createdByUserId': serializer.toJson<String?>(createdByUserId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  StockMovement copyWith({
+    String? id,
+    String? businessId,
+    String? branchId,
+    String? variantId,
+    String? movementType,
+    int? quantityDeltaMilliunits,
+    Value<int?> unitCostPaisa = const Value.absent(),
+    Value<String?> referenceType = const Value.absent(),
+    Value<String?> referenceId = const Value.absent(),
+    Value<String?> transferGroupId = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    Value<String?> createdByUserId = const Value.absent(),
+    DateTime? createdAt,
+  }) => StockMovement(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    branchId: branchId ?? this.branchId,
+    variantId: variantId ?? this.variantId,
+    movementType: movementType ?? this.movementType,
+    quantityDeltaMilliunits:
+        quantityDeltaMilliunits ?? this.quantityDeltaMilliunits,
+    unitCostPaisa: unitCostPaisa.present
+        ? unitCostPaisa.value
+        : this.unitCostPaisa,
+    referenceType: referenceType.present
+        ? referenceType.value
+        : this.referenceType,
+    referenceId: referenceId.present ? referenceId.value : this.referenceId,
+    transferGroupId: transferGroupId.present
+        ? transferGroupId.value
+        : this.transferGroupId,
+    note: note.present ? note.value : this.note,
+    createdByUserId: createdByUserId.present
+        ? createdByUserId.value
+        : this.createdByUserId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  StockMovement copyWithCompanion(StockMovementsCompanion data) {
+    return StockMovement(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      variantId: data.variantId.present ? data.variantId.value : this.variantId,
+      movementType: data.movementType.present
+          ? data.movementType.value
+          : this.movementType,
+      quantityDeltaMilliunits: data.quantityDeltaMilliunits.present
+          ? data.quantityDeltaMilliunits.value
+          : this.quantityDeltaMilliunits,
+      unitCostPaisa: data.unitCostPaisa.present
+          ? data.unitCostPaisa.value
+          : this.unitCostPaisa,
+      referenceType: data.referenceType.present
+          ? data.referenceType.value
+          : this.referenceType,
+      referenceId: data.referenceId.present
+          ? data.referenceId.value
+          : this.referenceId,
+      transferGroupId: data.transferGroupId.present
+          ? data.transferGroupId.value
+          : this.transferGroupId,
+      note: data.note.present ? data.note.value : this.note,
+      createdByUserId: data.createdByUserId.present
+          ? data.createdByUserId.value
+          : this.createdByUserId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockMovement(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('branchId: $branchId, ')
+          ..write('variantId: $variantId, ')
+          ..write('movementType: $movementType, ')
+          ..write('quantityDeltaMilliunits: $quantityDeltaMilliunits, ')
+          ..write('unitCostPaisa: $unitCostPaisa, ')
+          ..write('referenceType: $referenceType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('transferGroupId: $transferGroupId, ')
+          ..write('note: $note, ')
+          ..write('createdByUserId: $createdByUserId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    branchId,
+    variantId,
+    movementType,
+    quantityDeltaMilliunits,
+    unitCostPaisa,
+    referenceType,
+    referenceId,
+    transferGroupId,
+    note,
+    createdByUserId,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StockMovement &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.branchId == this.branchId &&
+          other.variantId == this.variantId &&
+          other.movementType == this.movementType &&
+          other.quantityDeltaMilliunits == this.quantityDeltaMilliunits &&
+          other.unitCostPaisa == this.unitCostPaisa &&
+          other.referenceType == this.referenceType &&
+          other.referenceId == this.referenceId &&
+          other.transferGroupId == this.transferGroupId &&
+          other.note == this.note &&
+          other.createdByUserId == this.createdByUserId &&
+          other.createdAt == this.createdAt);
+}
+
+class StockMovementsCompanion extends UpdateCompanion<StockMovement> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> branchId;
+  final Value<String> variantId;
+  final Value<String> movementType;
+  final Value<int> quantityDeltaMilliunits;
+  final Value<int?> unitCostPaisa;
+  final Value<String?> referenceType;
+  final Value<String?> referenceId;
+  final Value<String?> transferGroupId;
+  final Value<String?> note;
+  final Value<String?> createdByUserId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const StockMovementsCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.variantId = const Value.absent(),
+    this.movementType = const Value.absent(),
+    this.quantityDeltaMilliunits = const Value.absent(),
+    this.unitCostPaisa = const Value.absent(),
+    this.referenceType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.transferGroupId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdByUserId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StockMovementsCompanion.insert({
+    required String id,
+    required String businessId,
+    required String branchId,
+    required String variantId,
+    required String movementType,
+    required int quantityDeltaMilliunits,
+    this.unitCostPaisa = const Value.absent(),
+    this.referenceType = const Value.absent(),
+    this.referenceId = const Value.absent(),
+    this.transferGroupId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdByUserId = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       branchId = Value(branchId),
+       variantId = Value(variantId),
+       movementType = Value(movementType),
+       quantityDeltaMilliunits = Value(quantityDeltaMilliunits),
+       createdAt = Value(createdAt);
+  static Insertable<StockMovement> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? branchId,
+    Expression<String>? variantId,
+    Expression<String>? movementType,
+    Expression<int>? quantityDeltaMilliunits,
+    Expression<int>? unitCostPaisa,
+    Expression<String>? referenceType,
+    Expression<String>? referenceId,
+    Expression<String>? transferGroupId,
+    Expression<String>? note,
+    Expression<String>? createdByUserId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (branchId != null) 'branch_id': branchId,
+      if (variantId != null) 'variant_id': variantId,
+      if (movementType != null) 'movement_type': movementType,
+      if (quantityDeltaMilliunits != null)
+        'quantity_delta_milliunits': quantityDeltaMilliunits,
+      if (unitCostPaisa != null) 'unit_cost_paisa': unitCostPaisa,
+      if (referenceType != null) 'reference_type': referenceType,
+      if (referenceId != null) 'reference_id': referenceId,
+      if (transferGroupId != null) 'transfer_group_id': transferGroupId,
+      if (note != null) 'note': note,
+      if (createdByUserId != null) 'created_by_user_id': createdByUserId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StockMovementsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? branchId,
+    Value<String>? variantId,
+    Value<String>? movementType,
+    Value<int>? quantityDeltaMilliunits,
+    Value<int?>? unitCostPaisa,
+    Value<String?>? referenceType,
+    Value<String?>? referenceId,
+    Value<String?>? transferGroupId,
+    Value<String?>? note,
+    Value<String?>? createdByUserId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return StockMovementsCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      branchId: branchId ?? this.branchId,
+      variantId: variantId ?? this.variantId,
+      movementType: movementType ?? this.movementType,
+      quantityDeltaMilliunits:
+          quantityDeltaMilliunits ?? this.quantityDeltaMilliunits,
+      unitCostPaisa: unitCostPaisa ?? this.unitCostPaisa,
+      referenceType: referenceType ?? this.referenceType,
+      referenceId: referenceId ?? this.referenceId,
+      transferGroupId: transferGroupId ?? this.transferGroupId,
+      note: note ?? this.note,
+      createdByUserId: createdByUserId ?? this.createdByUserId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (variantId.present) {
+      map['variant_id'] = Variable<String>(variantId.value);
+    }
+    if (movementType.present) {
+      map['movement_type'] = Variable<String>(movementType.value);
+    }
+    if (quantityDeltaMilliunits.present) {
+      map['quantity_delta_milliunits'] = Variable<int>(
+        quantityDeltaMilliunits.value,
+      );
+    }
+    if (unitCostPaisa.present) {
+      map['unit_cost_paisa'] = Variable<int>(unitCostPaisa.value);
+    }
+    if (referenceType.present) {
+      map['reference_type'] = Variable<String>(referenceType.value);
+    }
+    if (referenceId.present) {
+      map['reference_id'] = Variable<String>(referenceId.value);
+    }
+    if (transferGroupId.present) {
+      map['transfer_group_id'] = Variable<String>(transferGroupId.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdByUserId.present) {
+      map['created_by_user_id'] = Variable<String>(createdByUserId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockMovementsCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('branchId: $branchId, ')
+          ..write('variantId: $variantId, ')
+          ..write('movementType: $movementType, ')
+          ..write('quantityDeltaMilliunits: $quantityDeltaMilliunits, ')
+          ..write('unitCostPaisa: $unitCostPaisa, ')
+          ..write('referenceType: $referenceType, ')
+          ..write('referenceId: $referenceId, ')
+          ..write('transferGroupId: $transferGroupId, ')
+          ..write('note: $note, ')
+          ..write('createdByUserId: $createdByUserId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6763,6 +7571,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ProductCodesTable productCodes = $ProductCodesTable(this);
   late final $BranchStocksTable branchStocks = $BranchStocksTable(this);
+  late final $StockMovementsTable stockMovements = $StockMovementsTable(this);
   late final Index branchesBusinessCodeUnique = Index(
     'branches_business_code_unique',
     'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
@@ -6843,6 +7652,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'branch_stocks_business_id_index',
     'CREATE INDEX branch_stocks_business_id_index ON branch_stocks (business_id)',
   );
+  late final Index stockMovementsBusinessBranchCreatedIndex = Index(
+    'stock_movements_business_branch_created_index',
+    'CREATE INDEX stock_movements_business_branch_created_index ON stock_movements (business_id, branch_id, created_at)',
+  );
+  late final Index stockMovementsBusinessVariantCreatedIndex = Index(
+    'stock_movements_business_variant_created_index',
+    'CREATE INDEX stock_movements_business_variant_created_index ON stock_movements (business_id, variant_id, created_at)',
+  );
+  late final Index stockMovementsTransferGroupIndex = Index(
+    'stock_movements_transfer_group_index',
+    'CREATE INDEX stock_movements_transfer_group_index ON stock_movements (transfer_group_id)',
+  );
+  late final Index stockMovementsReferenceIndex = Index(
+    'stock_movements_reference_index',
+    'CREATE INDEX stock_movements_reference_index ON stock_movements (business_id, reference_type, reference_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6862,6 +7687,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     productVariants,
     productCodes,
     branchStocks,
+    stockMovements,
     branchesBusinessCodeUnique,
     branchesBusinessIdIdUnique,
     usersBusinessUsernameUnique,
@@ -6882,6 +7708,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     productCodesBusinessVariantIndex,
     branchStocksBranchVariantUnique,
     branchStocksBusinessIdIndex,
+    stockMovementsBusinessBranchCreatedIndex,
+    stockMovementsBusinessVariantCreatedIndex,
+    stockMovementsTransferGroupIndex,
+    stockMovementsReferenceIndex,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -12857,6 +13687,385 @@ typedef $$BranchStocksTableProcessedTableManager =
       BranchStock,
       PrefetchHooks Function()
     >;
+typedef $$StockMovementsTableCreateCompanionBuilder =
+    StockMovementsCompanion Function({
+      required String id,
+      required String businessId,
+      required String branchId,
+      required String variantId,
+      required String movementType,
+      required int quantityDeltaMilliunits,
+      Value<int?> unitCostPaisa,
+      Value<String?> referenceType,
+      Value<String?> referenceId,
+      Value<String?> transferGroupId,
+      Value<String?> note,
+      Value<String?> createdByUserId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$StockMovementsTableUpdateCompanionBuilder =
+    StockMovementsCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> branchId,
+      Value<String> variantId,
+      Value<String> movementType,
+      Value<int> quantityDeltaMilliunits,
+      Value<int?> unitCostPaisa,
+      Value<String?> referenceType,
+      Value<String?> referenceId,
+      Value<String?> transferGroupId,
+      Value<String?> note,
+      Value<String?> createdByUserId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$StockMovementsTableFilterComposer
+    extends Composer<_$AppDatabase, $StockMovementsTable> {
+  $$StockMovementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get variantId => $composableBuilder(
+    column: $table.variantId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantityDeltaMilliunits => $composableBuilder(
+    column: $table.quantityDeltaMilliunits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get unitCostPaisa => $composableBuilder(
+    column: $table.unitCostPaisa,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transferGroupId => $composableBuilder(
+    column: $table.transferGroupId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdByUserId => $composableBuilder(
+    column: $table.createdByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StockMovementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StockMovementsTable> {
+  $$StockMovementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get variantId => $composableBuilder(
+    column: $table.variantId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantityDeltaMilliunits => $composableBuilder(
+    column: $table.quantityDeltaMilliunits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get unitCostPaisa => $composableBuilder(
+    column: $table.unitCostPaisa,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transferGroupId => $composableBuilder(
+    column: $table.transferGroupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdByUserId => $composableBuilder(
+    column: $table.createdByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StockMovementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StockMovementsTable> {
+  $$StockMovementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
+
+  GeneratedColumn<String> get variantId =>
+      $composableBuilder(column: $table.variantId, builder: (column) => column);
+
+  GeneratedColumn<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantityDeltaMilliunits => $composableBuilder(
+    column: $table.quantityDeltaMilliunits,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get unitCostPaisa => $composableBuilder(
+    column: $table.unitCostPaisa,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceType => $composableBuilder(
+    column: $table.referenceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get referenceId => $composableBuilder(
+    column: $table.referenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transferGroupId => $composableBuilder(
+    column: $table.transferGroupId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get createdByUserId => $composableBuilder(
+    column: $table.createdByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$StockMovementsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StockMovementsTable,
+          StockMovement,
+          $$StockMovementsTableFilterComposer,
+          $$StockMovementsTableOrderingComposer,
+          $$StockMovementsTableAnnotationComposer,
+          $$StockMovementsTableCreateCompanionBuilder,
+          $$StockMovementsTableUpdateCompanionBuilder,
+          (
+            StockMovement,
+            BaseReferences<_$AppDatabase, $StockMovementsTable, StockMovement>,
+          ),
+          StockMovement,
+          PrefetchHooks Function()
+        > {
+  $$StockMovementsTableTableManager(
+    _$AppDatabase db,
+    $StockMovementsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StockMovementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StockMovementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StockMovementsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> variantId = const Value.absent(),
+                Value<String> movementType = const Value.absent(),
+                Value<int> quantityDeltaMilliunits = const Value.absent(),
+                Value<int?> unitCostPaisa = const Value.absent(),
+                Value<String?> referenceType = const Value.absent(),
+                Value<String?> referenceId = const Value.absent(),
+                Value<String?> transferGroupId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String?> createdByUserId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StockMovementsCompanion(
+                id: id,
+                businessId: businessId,
+                branchId: branchId,
+                variantId: variantId,
+                movementType: movementType,
+                quantityDeltaMilliunits: quantityDeltaMilliunits,
+                unitCostPaisa: unitCostPaisa,
+                referenceType: referenceType,
+                referenceId: referenceId,
+                transferGroupId: transferGroupId,
+                note: note,
+                createdByUserId: createdByUserId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String branchId,
+                required String variantId,
+                required String movementType,
+                required int quantityDeltaMilliunits,
+                Value<int?> unitCostPaisa = const Value.absent(),
+                Value<String?> referenceType = const Value.absent(),
+                Value<String?> referenceId = const Value.absent(),
+                Value<String?> transferGroupId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String?> createdByUserId = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => StockMovementsCompanion.insert(
+                id: id,
+                businessId: businessId,
+                branchId: branchId,
+                variantId: variantId,
+                movementType: movementType,
+                quantityDeltaMilliunits: quantityDeltaMilliunits,
+                unitCostPaisa: unitCostPaisa,
+                referenceType: referenceType,
+                referenceId: referenceId,
+                transferGroupId: transferGroupId,
+                note: note,
+                createdByUserId: createdByUserId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StockMovementsTable, StockMovement>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $StockMovementsTable,
+                    StockMovement
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StockMovementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StockMovementsTable,
+      StockMovement,
+      $$StockMovementsTableFilterComposer,
+      $$StockMovementsTableOrderingComposer,
+      $$StockMovementsTableAnnotationComposer,
+      $$StockMovementsTableCreateCompanionBuilder,
+      $$StockMovementsTableUpdateCompanionBuilder,
+      (
+        StockMovement,
+        BaseReferences<_$AppDatabase, $StockMovementsTable, StockMovement>,
+      ),
+      StockMovement,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12889,4 +14098,6 @@ class $AppDatabaseManager {
       $$ProductCodesTableTableManager(_db, _db.productCodes);
   $$BranchStocksTableTableManager get branchStocks =>
       $$BranchStocksTableTableManager(_db, _db.branchStocks);
+  $$StockMovementsTableTableManager get stockMovements =>
+      $$StockMovementsTableTableManager(_db, _db.stockMovements);
 }

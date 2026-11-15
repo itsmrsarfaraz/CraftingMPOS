@@ -1245,7 +1245,7 @@ void main() {
     expect(devicesAfter, isEmpty);
   });
 
-  test('Version 10 database upgrades successfully to version 13', () async {
+  test('Version 10 database upgrades successfully to version 14', () async {
     await database.close();
     databaseClosed = true;
     final legacyDatabase = AppDatabase(
@@ -1307,7 +1307,7 @@ void main() {
         .customSelect('PRAGMA user_version')
         .getSingle();
 
-    expect(versionResult.read<int>('user_version'), 13);
+    expect(versionResult.read<int>('user_version'), 14);
 
     final categoriesResult = await legacyDatabase.customSelect('''
   SELECT name
@@ -1327,11 +1327,12 @@ void main() {
       'products',
       'product_variants',
       'product_codes',
-      'branch_stocks'
+      'branch_stocks',
+      'stock_movements'
     )
 ''').get();
 
-    expect(productTables, hasLength(4));
+    expect(productTables, hasLength(5));
 
     // Verify the primary barcode partial unique index exists.
     final primaryBarcodeIndex = await legacyDatabase.customSelect('''
@@ -2238,6 +2239,228 @@ void main() {
       );
 
       expect(category, isNotNull);
+    });
+  });
+
+  group('Stock Movement Ledger', () {
+    Future<void> createStockMovementFixture({
+      String businessId = 'business-001',
+      String branchId = 'branch-001',
+      String productId = 'product-001',
+      String variantId = 'variant-001',
+    }) async {
+      await createCategoryFixture(businessId: businessId);
+
+      await createBranchFixture(businessId: businessId, branchId: branchId);
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: productId,
+              businessId: businessId,
+              categoryId: Value('category-001'),
+              name: 'Test Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: variantId,
+              businessId: businessId,
+              productId: productId,
+              name: 'Default',
+              costPrice: 10000,
+              sellingPrice: 15000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    }
+
+    StockMovementsCompanion movement({
+      String id = 'movement-001',
+      String businessId = 'business-001',
+      String branchId = 'branch-001',
+      String variantId = 'variant-001',
+      String movementType = 'opening',
+      int quantity = 10000,
+      int? unitCostPaisa = 10000,
+      String? transferGroupId,
+    }) {
+      return StockMovementsCompanion.insert(
+        id: id,
+        businessId: businessId,
+        branchId: branchId,
+        variantId: variantId,
+        movementType: movementType,
+        quantityDeltaMilliunits: quantity,
+        unitCostPaisa: Value(unitCostPaisa),
+        transferGroupId: Value(transferGroupId),
+        createdAt: DateTime.now(),
+      );
+    }
+
+    test('Accepts valid stock-in and stock-out movements', () async {
+      await createStockMovementFixture();
+
+      await database
+          .into(database.stockMovements)
+          .insert(
+            movement(
+              id: 'movement-opening',
+              movementType: 'opening',
+              quantity: 20000,
+            ),
+          );
+
+      await database
+          .into(database.stockMovements)
+          .insert(
+            movement(
+              id: 'movement-sale',
+              movementType: 'sale',
+              quantity: -5000,
+            ),
+          );
+
+      final movements = await database.select(database.stockMovements).get();
+
+      expect(movements, hasLength(2));
+      expect(
+        movements.map((item) => item.quantityDeltaMilliunits),
+        containsAll([20000, -5000]),
+      );
+    });
+
+    test('Rejects zero movement quantities', () async {
+      await createStockMovementFixture();
+
+      expect(
+        () => database
+            .into(database.stockMovements)
+            .insert(movement(quantity: 0)),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('Rejects movement quantities with incorrect signs', () async {
+      await createStockMovementFixture();
+
+      expect(
+        () => database
+            .into(database.stockMovements)
+            .insert(movement(movementType: 'sale', quantity: 5000)),
+        throwsA(isA<Exception>()),
+      );
+
+      expect(
+        () => database
+            .into(database.stockMovements)
+            .insert(
+              movement(
+                id: 'movement-002',
+                movementType: 'purchase',
+                quantity: -5000,
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('Rejects a movement referencing another business variant', () async {
+      await createStockMovementFixture();
+
+      await database.createBusinessSettings(
+        BusinessSettingsCompanion.insert(
+          id: 'business-002',
+          businessName: 'Second Business',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      await createBranchFixture(
+        businessId: 'business-002',
+        branchId: 'branch-002',
+      );
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-002',
+              businessId: 'business-002',
+              name: 'Other Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-002',
+              businessId: 'business-002',
+              productId: 'product-002',
+              name: 'Default',
+              costPrice: 10000,
+              sellingPrice: 15000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      expect(
+        () => database
+            .into(database.stockMovements)
+            .insert(movement(variantId: 'variant-002')),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('Requires transfer group IDs for transfer movements', () async {
+      await createStockMovementFixture();
+
+      expect(
+        () => database
+            .into(database.stockMovements)
+            .insert(movement(movementType: 'transfer_out', quantity: -5000)),
+        throwsA(isA<Exception>()),
+      );
+
+      await expectLater(
+        database
+            .into(database.stockMovements)
+            .insert(
+              movement(
+                movementType: 'transfer_in',
+                quantity: 5000,
+                transferGroupId: 'transfer-001',
+              ),
+            ),
+        completes,
+      );
+    });
+
+    test('Rejects negative unit cost', () async {
+      await createStockMovementFixture();
+
+      expect(
+        () => database
+            .into(database.stockMovements)
+            .insert(movement(unitCostPaisa: -100)),
+        throwsA(isA<Exception>()),
+      );
     });
   });
 }

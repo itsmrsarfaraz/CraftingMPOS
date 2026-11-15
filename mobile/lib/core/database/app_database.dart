@@ -15,6 +15,7 @@ import 'tables/products.dart';
 import 'tables/product_variants.dart';
 import 'tables/product_codes.dart';
 import 'tables/branch_stocks.dart';
+import 'tables/stock_movements.dart';
 
 part 'app_database.g.dart';
 
@@ -34,6 +35,7 @@ part 'app_database.g.dart';
     ProductVariants,
     ProductCodes,
     BranchStocks,
+    StockMovements,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -41,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -147,6 +149,9 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(branchStocks);
         await migrator.createIndex(branchStocksBranchVariantUnique);
         await migrator.createIndex(branchStocksBusinessIdIndex);
+      }
+      if (from < 14) {
+        await migrator.createTable(stockMovements);
       }
     },
     beforeOpen: (OpeningDetails details) async {
