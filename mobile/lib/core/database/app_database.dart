@@ -11,6 +11,10 @@ import 'tables/user_roles.dart';
 import 'tables/user_branches.dart';
 import 'tables/devices.dart';
 import 'tables/categories.dart';
+import 'tables/products.dart';
+import 'tables/product_variants.dart';
+import 'tables/product_codes.dart';
+import 'tables/branch_stocks.dart';
 
 part 'app_database.g.dart';
 
@@ -26,6 +30,10 @@ part 'app_database.g.dart';
     UserBranches,
     Devices,
     Categories,
+    Products,
+    ProductVariants,
+    ProductCodes,
+    BranchStocks,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -33,12 +41,18 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator migrator) async {
       await migrator.createAll();
+
+      await customStatement('''
+    CREATE UNIQUE INDEX product_codes_one_primary_per_variant
+    ON product_codes (business_id, variant_id)
+    WHERE is_primary = 1
+  ''');
     },
     onUpgrade: (Migrator migrator, int from, int to) async {
       if (from < 2) {
@@ -99,6 +113,40 @@ class AppDatabase extends _$AppDatabase {
       if (from < 12) {
         await migrator.createTable(categories);
         await migrator.createIndex(categoriesBusinessNameUnique);
+      }
+
+      if (from < 13) {
+        // Parent composite indexes required by foreign keys.
+        await migrator.createIndex(branchesBusinessIdIdUnique);
+        await migrator.createIndex(categoriesBusinessIdIdUnique);
+
+        // Products.
+        await migrator.createTable(products);
+        await migrator.createIndex(productsBusinessIdIndex);
+        await migrator.createIndex(productsBusinessIdIdUnique);
+
+        // Product variants.
+        await migrator.createTable(productVariants);
+        await migrator.createIndex(productVariantsBusinessSkuUnique);
+        await migrator.createIndex(productVariantsBusinessProductIndex);
+        await migrator.createIndex(productVariantsBusinessIdIdUnique);
+
+        // Product codes and barcodes.
+        await migrator.createTable(productCodes);
+        await migrator.createIndex(productCodesBusinessCodeUnique);
+        await migrator.createIndex(productCodesBusinessVariantIndex);
+
+        // Allow only one primary barcode per variant.
+        await customStatement('''
+    CREATE UNIQUE INDEX product_codes_one_primary_per_variant
+    ON product_codes (business_id, variant_id)
+    WHERE is_primary = 1
+  ''');
+
+        // Branch-specific inventory.
+        await migrator.createTable(branchStocks);
+        await migrator.createIndex(branchStocksBranchVariantUnique);
+        await migrator.createIndex(branchStocksBusinessIdIndex);
       }
     },
     beforeOpen: (OpeningDetails details) async {

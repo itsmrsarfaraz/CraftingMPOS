@@ -7,6 +7,11 @@ import 'business_settings.dart';
   columns: {#businessId, #name},
   unique: true,
 )
+@TableIndex(
+  name: 'categories_business_id_id_unique',
+  columns: {#businessId, #id},
+  unique: true,
+)
 class Categories extends Table {
   TextColumn get id => text()();
 

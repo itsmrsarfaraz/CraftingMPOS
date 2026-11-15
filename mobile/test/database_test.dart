@@ -1245,21 +1245,27 @@ void main() {
     expect(devicesAfter, isEmpty);
   });
 
-  test(
-    'Version 10 database receives business role cascade migration',
-    () async {
-      await database.close();
-      databaseClosed = true;
-      final legacyDatabase = AppDatabase(
-        NativeDatabase.memory(
-          setup: (db) {
-            db.execute('''
+  test('Version 10 database upgrades successfully to version 13', () async {
+    await database.close();
+    databaseClosed = true;
+    final legacyDatabase = AppDatabase(
+      NativeDatabase.memory(
+        setup: (db) {
+          db.execute('''
           CREATE TABLE business_settings (
             id TEXT PRIMARY KEY
           )
         ''');
 
-            db.execute('''
+          db.execute('''
+  CREATE TABLE branches (
+    id TEXT PRIMARY KEY,
+    business_id TEXT NOT NULL
+      REFERENCES business_settings(id)
+  )
+''');
+
+          db.execute('''
           CREATE TABLE roles (
             id TEXT PRIMARY KEY,
             business_id TEXT NOT NULL
@@ -1267,7 +1273,7 @@ void main() {
           )
         ''');
 
-            db.execute('''
+          db.execute('''
           CREATE TABLE role_permissions (
             role_id TEXT NOT NULL
               REFERENCES roles(id) ON DELETE CASCADE,
@@ -1276,7 +1282,7 @@ void main() {
           )
         ''');
 
-            db.execute('''
+          db.execute('''
           CREATE TABLE user_roles (
             user_id TEXT NOT NULL,
             role_id TEXT NOT NULL
@@ -1285,7 +1291,7 @@ void main() {
           )
         ''');
 
-            db.execute('''
+          db.execute('''
           CREATE TABLE devices (
             id TEXT PRIMARY KEY,
             business_id TEXT NOT NULL
@@ -1293,90 +1299,114 @@ void main() {
           )
         ''');
 
-            db.execute('PRAGMA user_version = 10');
-          },
-        ),
-      );
-      final versionResult = await legacyDatabase
-          .customSelect('PRAGMA user_version')
-          .getSingle();
+          db.execute('PRAGMA user_version = 10');
+        },
+      ),
+    );
+    final versionResult = await legacyDatabase
+        .customSelect('PRAGMA user_version')
+        .getSingle();
 
-      expect(versionResult.read<int>('user_version'), 12);
+    expect(versionResult.read<int>('user_version'), 13);
 
-      final categoriesResult = await legacyDatabase.customSelect('''
+    final categoriesResult = await legacyDatabase.customSelect('''
   SELECT name
   FROM sqlite_master
   WHERE type = 'table'
     AND name = 'categories'
 ''').get();
 
-      expect(categoriesResult, hasLength(1));
+    expect(categoriesResult, hasLength(1));
 
-      final triggerResult = await legacyDatabase.customSelect('''
+    // Verify product and inventory tables were created.
+    final productTables = await legacyDatabase.customSelect('''
+  SELECT name
+  FROM sqlite_master
+  WHERE type = 'table'
+    AND name IN (
+      'products',
+      'product_variants',
+      'product_codes',
+      'branch_stocks'
+    )
+''').get();
+
+    expect(productTables, hasLength(4));
+
+    // Verify the primary barcode partial unique index exists.
+    final primaryBarcodeIndex = await legacyDatabase.customSelect('''
+  SELECT name
+  FROM sqlite_master
+  WHERE type = 'index'
+    AND name = 'product_codes_one_primary_per_variant'
+''').get();
+
+    expect(primaryBarcodeIndex, hasLength(1));
+
+    final triggerResult = await legacyDatabase.customSelect('''
   SELECT name
   FROM sqlite_master
   WHERE type = 'trigger'
     AND name = 'business_delete_roles_cascade'
 ''').get();
 
-      expect(triggerResult, hasLength(1));
-      try {
-        // Insert existing version 10 records.
-        await legacyDatabase.customStatement(
-          "INSERT INTO business_settings (id) VALUES ('business-001')",
-        );
+    expect(triggerResult, hasLength(1));
+    try {
+      // Insert existing version 10 records.
+      await legacyDatabase.customStatement(
+        "INSERT INTO business_settings (id) VALUES ('business-001')",
+      );
 
-        await legacyDatabase.customStatement(
-          "INSERT INTO roles (id, business_id) "
-          "VALUES ('role-001', 'business-001')",
-        );
+      await legacyDatabase.customStatement(
+        "INSERT INTO roles (id, business_id) "
+        "VALUES ('role-001', 'business-001')",
+      );
 
-        await legacyDatabase.customStatement(
-          "INSERT INTO role_permissions (role_id, permission_id) "
-          "VALUES ('role-001', 'permission-001')",
-        );
+      await legacyDatabase.customStatement(
+        "INSERT INTO role_permissions (role_id, permission_id) "
+        "VALUES ('role-001', 'permission-001')",
+      );
 
-        await legacyDatabase.customStatement(
-          "INSERT INTO user_roles (user_id, role_id) "
-          "VALUES ('user-001', 'role-001')",
-        );
+      await legacyDatabase.customStatement(
+        "INSERT INTO user_roles (user_id, role_id) "
+        "VALUES ('user-001', 'role-001')",
+      );
 
-        await legacyDatabase.customStatement(
-          "INSERT INTO devices (id, business_id) "
-          "VALUES ('device-001', 'business-001')",
-        );
+      await legacyDatabase.customStatement(
+        "INSERT INTO devices (id, business_id) "
+        "VALUES ('device-001', 'business-001')",
+      );
 
-        // Delete the business.
-        await legacyDatabase.customStatement(
-          "DELETE FROM business_settings WHERE id = 'business-001'",
-        );
+      // Delete the business.
+      await legacyDatabase.customStatement(
+        "DELETE FROM business_settings WHERE id = 'business-001'",
+      );
 
-        // Verify that the migration trigger and foreign-key cascades worked.
-        final roles = await legacyDatabase
-            .customSelect('SELECT * FROM roles')
-            .get();
+      // Verify that the migration trigger and foreign-key cascades worked.
+      final roles = await legacyDatabase
+          .customSelect('SELECT * FROM roles')
+          .get();
 
-        final rolePermissions = await legacyDatabase
-            .customSelect('SELECT * FROM role_permissions')
-            .get();
+      final rolePermissions = await legacyDatabase
+          .customSelect('SELECT * FROM role_permissions')
+          .get();
 
-        final userRoles = await legacyDatabase
-            .customSelect('SELECT * FROM user_roles')
-            .get();
+      final userRoles = await legacyDatabase
+          .customSelect('SELECT * FROM user_roles')
+          .get();
 
-        final devices = await legacyDatabase
-            .customSelect('SELECT * FROM devices')
-            .get();
+      final devices = await legacyDatabase
+          .customSelect('SELECT * FROM devices')
+          .get();
 
-        expect(roles, isEmpty);
-        expect(rolePermissions, isEmpty);
-        expect(userRoles, isEmpty);
-        expect(devices, isEmpty);
-      } finally {
-        await legacyDatabase.close();
-      }
-    },
-  );
+      expect(roles, isEmpty);
+      expect(rolePermissions, isEmpty);
+      expect(userRoles, isEmpty);
+      expect(devices, isEmpty);
+    } finally {
+      await legacyDatabase.close();
+    }
+  });
 
   group('Category Management', () {
     test('Create and retrieve a category', () async {
