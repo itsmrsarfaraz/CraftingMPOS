@@ -5,21 +5,28 @@ import 'package:crafting_mpos/core/database/app_database.dart';
 
 void main() {
   late AppDatabase database;
+  late bool databaseClosed;
 
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
+    databaseClosed = false;
   });
 
   tearDown(() async {
-    await database.close();
+    if (!databaseClosed) {
+      await database.close();
+    }
   });
 
-  Future<void> createRoleFixture() async {
+  Future<void> createRoleFixture({
+    String businessId = 'business-001',
+    String roleId = 'role-001',
+  }) async {
     final now = DateTime.now();
 
     await database.createBusinessSettings(
       BusinessSettingsCompanion.insert(
-        id: 'business-001',
+        id: businessId,
         businessName: 'Test Business',
         createdAt: now,
         updatedAt: now,
@@ -28,8 +35,8 @@ void main() {
 
     await database.createRole(
       RolesCompanion.insert(
-        id: 'role-001',
-        businessId: 'business-001',
+        id: roleId,
+        businessId: businessId,
         name: 'Cashier',
         slug: 'cashier',
         createdAt: now,
@@ -66,7 +73,6 @@ void main() {
     );
   }
 
-  
   Future<void> createBranchFixture({
     String businessId = 'business-001',
     String branchId = 'branch-001',
@@ -1016,4 +1022,322 @@ void main() {
     expect(device.deviceType, 'android');
     expect(device.isActive, isTrue);
   });
+
+  test('Database can retrieve all devices for a business', () async {
+    await createRoleFixture();
+
+    await createDeviceFixture(
+      deviceId: 'device-001',
+      deviceIdentifier: 'android-device-001',
+      deviceName: 'Main Counter',
+    );
+
+    await createDeviceFixture(
+      deviceId: 'device-002',
+      deviceIdentifier: 'android-device-002',
+      deviceName: 'Second Counter',
+    );
+
+    final devices = await database.getDevicesForBusiness('business-001');
+
+    expect(devices.length, 2);
+    expect(
+      devices.map((device) => device.deviceName),
+      containsAll(['Main Counter', 'Second Counter']),
+    );
+  });
+
+  test('Devices are isolated between businesses', () async {
+    await createRoleFixture();
+
+    await createDeviceFixture(
+      businessId: 'business-001',
+      deviceId: 'device-001',
+      deviceIdentifier: 'android-device-001',
+    );
+
+    await createRoleFixture(businessId: 'business-002', roleId: 'role-002');
+
+    await createDeviceFixture(
+      businessId: 'business-002',
+      deviceId: 'device-002',
+      deviceIdentifier: 'android-device-002',
+    );
+
+    final firstBusinessDevices = await database.getDevicesForBusiness(
+      'business-001',
+    );
+
+    final secondBusinessDevices = await database.getDevicesForBusiness(
+      'business-002',
+    );
+
+    expect(firstBusinessDevices.length, 1);
+    expect(firstBusinessDevices.first.id, 'device-001');
+
+    expect(secondBusinessDevices.length, 1);
+    expect(secondBusinessDevices.first.id, 'device-002');
+  });
+
+  test('Device identifier must be unique within a business', () async {
+    await createRoleFixture();
+
+    await createDeviceFixture(
+      businessId: 'business-001',
+      deviceId: 'device-001',
+      deviceIdentifier: 'android-device-001',
+    );
+
+    await expectLater(
+      createDeviceFixture(
+        businessId: 'business-001',
+        deviceId: 'device-002',
+        deviceIdentifier: 'android-device-001',
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('Different businesses can use the same device identifier', () async {
+    await createRoleFixture();
+
+    await createDeviceFixture(
+      businessId: 'business-001',
+      deviceId: 'device-001',
+      deviceIdentifier: 'android-device-shared',
+    );
+
+    await createRoleFixture(businessId: 'business-002', roleId: 'role-002');
+
+    await createDeviceFixture(
+      businessId: 'business-002',
+      deviceId: 'device-002',
+      deviceIdentifier: 'android-device-shared',
+    );
+
+    final firstBusinessDevice = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-shared',
+    );
+
+    final secondBusinessDevice = await database.getDeviceByIdentifier(
+      'business-002',
+      'android-device-shared',
+    );
+
+    expect(firstBusinessDevice?.id, 'device-001');
+    expect(secondBusinessDevice?.id, 'device-002');
+  });
+
+  test('Database can update device last seen timestamp', () async {
+    await createRoleFixture();
+    await createDeviceFixture();
+
+    final deviceBefore = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-001',
+    );
+
+    expect(deviceBefore, isNotNull);
+    expect(deviceBefore!.lastSeenAt, isNull);
+
+    final updatedRows = await database.updateDeviceLastSeen('device-001');
+
+    final deviceAfter = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-001',
+    );
+
+    expect(updatedRows, 1);
+    expect(deviceAfter!.lastSeenAt, isNotNull);
+    expect(
+      deviceAfter.updatedAt.isAfter(deviceBefore.updatedAt) ||
+          deviceAfter.updatedAt.isAtSameMomentAs(deviceBefore.updatedAt),
+      isTrue,
+    );
+  });
+
+  test('Database can deactivate and reactivate a device', () async {
+    await createRoleFixture();
+    await createDeviceFixture();
+
+    final initialDevice = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-001',
+    );
+
+    expect(initialDevice!.isActive, isTrue);
+
+    final deactivatedRows = await database.setDeviceActive('device-001', false);
+
+    final deactivatedDevice = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-001',
+    );
+
+    expect(deactivatedRows, 1);
+    expect(deactivatedDevice!.isActive, isFalse);
+
+    final activatedRows = await database.setDeviceActive('device-001', true);
+
+    final activatedDevice = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-001',
+    );
+
+    expect(activatedRows, 1);
+    expect(activatedDevice!.isActive, isTrue);
+  });
+
+  test('Database returns null for an unregistered device', () async {
+    await createRoleFixture();
+
+    final device = await database.getDeviceByIdentifier(
+      'business-001',
+      'unknown-device-001',
+    );
+
+    expect(device, isNull);
+  });
+
+  test('Deleting a business also deletes its registered devices', () async {
+    await createRoleFixture();
+    await createDeviceFixture();
+
+    final devicesBefore = await database.getDevicesForBusiness('business-001');
+
+    expect(devicesBefore.length, 1);
+
+    await (database.delete(
+      database.businessSettings,
+    )..where((business) => business.id.equals('business-001'))).go();
+
+    final devicesAfter = await database.getDevicesForBusiness('business-001');
+
+    expect(devicesAfter, isEmpty);
+  });
+
+  test(
+    'Version 10 database receives business role cascade migration',
+    () async {
+      await database.close();
+      databaseClosed = true;
+      final legacyDatabase = AppDatabase(
+        NativeDatabase.memory(
+          setup: (db) {
+            db.execute('''
+          CREATE TABLE business_settings (
+            id TEXT PRIMARY KEY
+          )
+        ''');
+
+            db.execute('''
+          CREATE TABLE roles (
+            id TEXT PRIMARY KEY,
+            business_id TEXT NOT NULL
+              REFERENCES business_settings(id)
+          )
+        ''');
+
+            db.execute('''
+          CREATE TABLE role_permissions (
+            role_id TEXT NOT NULL
+              REFERENCES roles(id) ON DELETE CASCADE,
+            permission_id TEXT NOT NULL,
+            PRIMARY KEY (role_id, permission_id)
+          )
+        ''');
+
+            db.execute('''
+          CREATE TABLE user_roles (
+            user_id TEXT NOT NULL,
+            role_id TEXT NOT NULL
+              REFERENCES roles(id) ON DELETE CASCADE,
+            PRIMARY KEY (user_id, role_id)
+          )
+        ''');
+
+            db.execute('''
+          CREATE TABLE devices (
+            id TEXT PRIMARY KEY,
+            business_id TEXT NOT NULL
+              REFERENCES business_settings(id) ON DELETE CASCADE
+          )
+        ''');
+
+            db.execute('PRAGMA user_version = 10');
+          },
+        ),
+      );
+      final versionResult = await legacyDatabase
+          .customSelect('PRAGMA user_version')
+          .getSingle();
+
+      expect(versionResult.read<int>('user_version'), 11);
+
+      final triggerResult = await legacyDatabase.customSelect('''
+  SELECT name
+  FROM sqlite_master
+  WHERE type = 'trigger'
+    AND name = 'business_delete_roles_cascade'
+''').get();
+
+      expect(triggerResult, hasLength(1));
+      try {
+        // Insert existing version 10 records.
+        await legacyDatabase.customStatement(
+          "INSERT INTO business_settings (id) VALUES ('business-001')",
+        );
+
+        await legacyDatabase.customStatement(
+          "INSERT INTO roles (id, business_id) "
+          "VALUES ('role-001', 'business-001')",
+        );
+
+        await legacyDatabase.customStatement(
+          "INSERT INTO role_permissions (role_id, permission_id) "
+          "VALUES ('role-001', 'permission-001')",
+        );
+
+        await legacyDatabase.customStatement(
+          "INSERT INTO user_roles (user_id, role_id) "
+          "VALUES ('user-001', 'role-001')",
+        );
+
+        await legacyDatabase.customStatement(
+          "INSERT INTO devices (id, business_id) "
+          "VALUES ('device-001', 'business-001')",
+        );
+
+        // Delete the business.
+        await legacyDatabase.customStatement(
+          "DELETE FROM business_settings WHERE id = 'business-001'",
+        );
+
+        // Verify that the migration trigger and foreign-key cascades worked.
+        final roles = await legacyDatabase
+            .customSelect('SELECT * FROM roles')
+            .get();
+
+        final rolePermissions = await legacyDatabase
+            .customSelect('SELECT * FROM role_permissions')
+            .get();
+
+        final userRoles = await legacyDatabase
+            .customSelect('SELECT * FROM user_roles')
+            .get();
+
+        final devices = await legacyDatabase
+            .customSelect('SELECT * FROM devices')
+            .get();
+
+        expect(roles, isEmpty);
+        expect(rolePermissions, isEmpty);
+        expect(userRoles, isEmpty);
+        expect(devices, isEmpty);
+      } finally {
+        await legacyDatabase.close();
+      }
+    },
+  );
 }

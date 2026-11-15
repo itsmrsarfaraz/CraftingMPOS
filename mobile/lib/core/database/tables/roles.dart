@@ -10,7 +10,8 @@ import 'business_settings.dart';
 class Roles extends Table {
   TextColumn get id => text()();
 
-  TextColumn get businessId => text().references(BusinessSettings, #id)();
+  TextColumn get businessId =>
+      text().references(BusinessSettings, #id, onDelete: KeyAction.cascade)();
 
   TextColumn get name => text().withLength(min: 2, max: 80)();
 

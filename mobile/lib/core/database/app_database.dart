@@ -31,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -80,6 +80,18 @@ class AppDatabase extends _$AppDatabase {
       if (from < 10) {
         await migrator.createTable(devices);
         await migrator.createIndex(devicesBusinessIdIndex);
+      }
+
+      if (from < 11) {
+        await customStatement('''
+    CREATE TRIGGER IF NOT EXISTS business_delete_roles_cascade
+    BEFORE DELETE ON business_settings
+    FOR EACH ROW
+    BEGIN
+      DELETE FROM roles
+      WHERE business_id = OLD.id;
+    END;
+  ''');
       }
     },
     beforeOpen: (OpeningDetails details) async {

@@ -1554,7 +1554,7 @@ class $RolesTable extends Roles with TableInfo<$RolesTable, Role> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES business_settings (id)',
+      'REFERENCES business_settings (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
@@ -4110,6 +4110,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'business_settings',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('roles', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'roles',
