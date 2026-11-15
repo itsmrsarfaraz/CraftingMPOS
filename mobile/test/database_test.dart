@@ -66,6 +66,24 @@ void main() {
     );
   }
 
+  Future<void> createBranchFixture({
+    String businessId = 'business-001',
+    String branchId = 'branch-001',
+    String code = 'MAIN',
+    String name = 'Main Branch',
+  }) async {
+    await database.createBranch(
+      BranchesCompanion.insert(
+        id: branchId,
+        businessId: businessId,
+        name: name,
+        code: code,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
   test('Database can save and retrieve business settings', () async {
     final now = DateTime.now();
 
@@ -935,5 +953,29 @@ void main() {
     )..where((role) => role.id.equals('role-001'))).go();
 
     expect(await database.getUsersForRole('role-001'), isEmpty);
+  });
+
+  test('A user can be assigned to multiple branches', () async {
+    await createRoleFixture();
+    await createUserFixture();
+
+    await createBranchFixture();
+
+    await createBranchFixture(
+      branchId: 'branch-002',
+      code: 'BR-002',
+      name: 'Second Branch',
+    );
+
+    await database.assignUserToBranch('user-001', 'branch-001');
+    await database.assignUserToBranch('user-001', 'branch-002');
+
+    final assignments = await database.getBranchesForUser('user-001');
+
+    expect(assignments, hasLength(2));
+    expect(
+      assignments.map((assignment) => assignment.branchId),
+      containsAll(['branch-001', 'branch-002']),
+    );
   });
 }

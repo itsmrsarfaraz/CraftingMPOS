@@ -8,6 +8,7 @@ import 'tables/roles.dart';
 import 'tables/permissions.dart';
 import 'tables/role_permissions.dart';
 import 'tables/user_roles.dart';
+import 'tables/user_branches.dart';
 
 part 'app_database.g.dart';
 
@@ -20,6 +21,7 @@ part 'app_database.g.dart';
     Permissions,
     RolePermissions,
     UserRoles,
+    UserBranches,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -27,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -66,6 +68,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) {
         await migrator.createTable(userRoles);
         await migrator.createIndex(userRolesRoleIdIndex);
+      }
+
+      if (from < 9) {
+        await migrator.createTable(userBranches);
+        await migrator.createIndex(userBranchesBranchIdIndex);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -229,6 +236,70 @@ class AppDatabase extends _$AppDatabase {
     final assignment =
         await (select(userRoles)..where(
               (item) => item.userId.equals(userId) & item.roleId.equals(roleId),
+            ))
+            .getSingleOrNull();
+
+    return assignment != null;
+  }
+
+  Future<int> assignUserToBranch(String userId, String branchId) {
+    return transaction(() async {
+      final user = await (select(
+        users,
+      )..where((item) => item.id.equals(userId))).getSingleOrNull();
+
+      final branch = await (select(
+        branches,
+      )..where((item) => item.id.equals(branchId))).getSingleOrNull();
+
+      if (user == null) {
+        throw StateError('User does not exist.');
+      }
+
+      if (branch == null) {
+        throw StateError('Branch does not exist.');
+      }
+
+      if (user.businessId != branch.businessId) {
+        throw StateError('Cannot assign a user to another business branch.');
+      }
+
+      return into(userBranches).insert(
+        UserBranchesCompanion.insert(
+          userId: userId,
+          branchId: branchId,
+          createdAt: DateTime.now(),
+        ),
+      );
+    });
+  }
+
+  Future<List<UserBranche>> getBranchesForUser(String userId) {
+    return (select(
+      userBranches,
+    )..where((assignment) => assignment.userId.equals(userId))).get();
+  }
+
+  Future<List<UserBranche>> getUsersForBranch(String branchId) {
+    return (select(
+      userBranches,
+    )..where((assignment) => assignment.branchId.equals(branchId))).get();
+  }
+
+  Future<int> removeUserFromBranch(String userId, String branchId) {
+    return (delete(userBranches)..where(
+          (assignment) =>
+              assignment.userId.equals(userId) &
+              assignment.branchId.equals(branchId),
+        ))
+        .go();
+  }
+
+  Future<bool> userHasBranchAccess(String userId, String branchId) async {
+    final assignment =
+        await (select(userBranches)..where(
+              (item) =>
+                  item.userId.equals(userId) & item.branchId.equals(branchId),
             ))
             .getSingleOrNull();
 

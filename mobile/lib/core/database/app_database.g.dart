@@ -3073,6 +3073,279 @@ class UserRolesCompanion extends UpdateCompanion<UserRole> {
   }
 }
 
+class $UserBranchesTable extends UserBranches
+    with TableInfo<$UserBranchesTable, UserBranche> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserBranchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES users (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [userId, branchId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_branches';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserBranche> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId, branchId};
+  @override
+  UserBranche map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserBranche(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UserBranchesTable createAlias(String alias) {
+    return $UserBranchesTable(attachedDatabase, alias);
+  }
+}
+
+class UserBranche extends DataClass implements Insertable<UserBranche> {
+  final String userId;
+  final String branchId;
+  final DateTime createdAt;
+  const UserBranche({
+    required this.userId,
+    required this.branchId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UserBranchesCompanion toCompanion(bool nullToAbsent) {
+    return UserBranchesCompanion(
+      userId: Value(userId),
+      branchId: Value(branchId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory UserBranche.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserBranche(
+      userId: serializer.fromJson<String>(json['userId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'branchId': serializer.toJson<String>(branchId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  UserBranche copyWith({
+    String? userId,
+    String? branchId,
+    DateTime? createdAt,
+  }) => UserBranche(
+    userId: userId ?? this.userId,
+    branchId: branchId ?? this.branchId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  UserBranche copyWithCompanion(UserBranchesCompanion data) {
+    return UserBranche(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserBranche(')
+          ..write('userId: $userId, ')
+          ..write('branchId: $branchId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(userId, branchId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserBranche &&
+          other.userId == this.userId &&
+          other.branchId == this.branchId &&
+          other.createdAt == this.createdAt);
+}
+
+class UserBranchesCompanion extends UpdateCompanion<UserBranche> {
+  final Value<String> userId;
+  final Value<String> branchId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const UserBranchesCompanion({
+    this.userId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserBranchesCompanion.insert({
+    required String userId,
+    required String branchId,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       branchId = Value(branchId),
+       createdAt = Value(createdAt);
+  static Insertable<UserBranche> custom({
+    Expression<String>? userId,
+    Expression<String>? branchId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (branchId != null) 'branch_id': branchId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserBranchesCompanion copyWith({
+    Value<String>? userId,
+    Value<String>? branchId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return UserBranchesCompanion(
+      userId: userId ?? this.userId,
+      branchId: branchId ?? this.branchId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserBranchesCompanion(')
+          ..write('userId: $userId, ')
+          ..write('branchId: $branchId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3087,6 +3360,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $UserRolesTable userRoles = $UserRolesTable(this);
+  late final $UserBranchesTable userBranches = $UserBranchesTable(this);
   late final Index branchesBusinessCodeUnique = Index(
     'branches_business_code_unique',
     'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
@@ -3111,6 +3385,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'user_roles_role_id_index',
     'CREATE INDEX user_roles_role_id_index ON user_roles (role_id)',
   );
+  late final Index userBranchesBranchIdIndex = Index(
+    'user_branches_branch_id_index',
+    'CREATE INDEX user_branches_branch_id_index ON user_branches (branch_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3123,12 +3401,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     permissions,
     rolePermissions,
     userRoles,
+    userBranches,
     branchesBusinessCodeUnique,
     usersBusinessUsernameUnique,
     rolesBusinessSlugUnique,
     permissionsSlugUnique,
     rolePermissionsPermissionIdIndex,
     userRolesRoleIdIndex,
+    userBranchesBranchIdIndex,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3159,6 +3439,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('user_roles', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'users',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('user_branches', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'branches',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('user_branches', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3712,6 +4006,24 @@ final class $$BranchesTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$UserBranchesTable, List<UserBranche>>
+  _userBranchesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.userBranches,
+    aliasName: 'branches__id__user_branches__branch_id',
+  );
+
+  $$UserBranchesTableProcessedTableManager get userBranchesRefs {
+    final manager = $$UserBranchesTableTableManager(
+      $_db,
+      $_db.userBranches,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_userBranchesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$BranchesTableFilterComposer
@@ -3779,6 +4091,31 @@ class $$BranchesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> userBranchesRefs(
+    Expression<bool> Function($$UserBranchesTableFilterComposer f) f,
+  ) {
+    final $$UserBranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userBranches,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserBranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.userBranches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -3902,6 +4239,31 @@ class $$BranchesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> userBranchesRefs<T extends Object>(
+    Expression<T> Function($$UserBranchesTableAnnotationComposer a) f,
+  ) {
+    final $$UserBranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userBranches,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserBranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.userBranches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BranchesTableTableManager
@@ -3917,7 +4279,7 @@ class $$BranchesTableTableManager
           $$BranchesTableUpdateCompanionBuilder,
           (Branche, $$BranchesTableReferences),
           Branche,
-          PrefetchHooks Function({bool businessId})
+          PrefetchHooks Function({bool businessId, bool userBranchesRefs})
         > {
   $$BranchesTableTableManager(_$AppDatabase db, $BranchesTable table)
     : super(
@@ -3982,45 +4344,69 @@ class $$BranchesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({businessId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (businessId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.businessId,
-                        referencedTable: $$BranchesTableReferences
-                            ._businessIdTable(db),
-                        referencedColumn: $$BranchesTableReferences
-                            ._businessIdTable(db)
-                            .id,
-                      ) as T;
-                    }
+          prefetchHooksCallback:
+              ({businessId = false, userBranchesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (userBranchesRefs) db.userBranches,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (businessId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.businessId,
+                            referencedTable: $$BranchesTableReferences
+                                ._businessIdTable(db),
+                            referencedColumn: $$BranchesTableReferences
+                                ._businessIdTable(db)
+                                .id,
+                          ) as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (userBranchesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          Branche,
+                          $BranchesTable,
+                          UserBranche,
+                          $UserBranchesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._userBranchesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userBranchesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'branch_id',
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -4037,7 +4423,7 @@ typedef $$BranchesTableProcessedTableManager =
       $$BranchesTableUpdateCompanionBuilder,
       (Branche, $$BranchesTableReferences),
       Branche,
-      PrefetchHooks Function({bool businessId})
+      PrefetchHooks Function({bool businessId, bool userBranchesRefs})
     >;
 typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
   required String id,
@@ -4101,6 +4487,24 @@ final class $$UsersTableReferences
     ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_userRolesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$UserBranchesTable, List<UserBranche>>
+  _userBranchesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.userBranches,
+    aliasName: 'users__id__user_branches__user_id',
+  );
+
+  $$UserBranchesTableProcessedTableManager get userBranchesRefs {
+    final manager = $$UserBranchesTableTableManager(
+      $_db,
+      $_db.userBranches,
+    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_userBranchesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4199,6 +4603,31 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
           }) => $$UserRolesTableFilterComposer(
             $db: $db,
             $table: $db.userRoles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> userBranchesRefs(
+    Expression<bool> Function($$UserBranchesTableFilterComposer f) f,
+  ) {
+    final $$UserBranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userBranches,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserBranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.userBranches,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4374,6 +4803,31 @@ class $$UsersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> userBranchesRefs<T extends Object>(
+    Expression<T> Function($$UserBranchesTableAnnotationComposer a) f,
+  ) {
+    final $$UserBranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.userBranches,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserBranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.userBranches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$UsersTableTableManager
@@ -4389,7 +4843,11 @@ class $$UsersTableTableManager
           $$UsersTableUpdateCompanionBuilder,
           (User, $$UsersTableReferences),
           User,
-          PrefetchHooks Function({bool businessId, bool userRolesRefs})
+          PrefetchHooks Function({
+            bool businessId,
+            bool userRolesRefs,
+            bool userBranchesRefs,
+          })
         > {
   $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
     : super(
@@ -4462,62 +4920,94 @@ class $$UsersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({businessId = false, userRolesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (userRolesRefs) db.userRoles],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (businessId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.businessId,
-                        referencedTable: $$UsersTableReferences
-                            ._businessIdTable(db),
-                        referencedColumn: $$UsersTableReferences
-                            ._businessIdTable(db)
-                            .id,
-                      ) as T;
-                    }
+          prefetchHooksCallback:
+              ({
+                businessId = false,
+                userRolesRefs = false,
+                userBranchesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (userRolesRefs) db.userRoles,
+                    if (userBranchesRefs) db.userBranches,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (businessId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.businessId,
+                            referencedTable: $$UsersTableReferences
+                                ._businessIdTable(db),
+                            referencedColumn: $$UsersTableReferences
+                                ._businessIdTable(db)
+                                .id,
+                          ) as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (userRolesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          User,
+                          $UsersTable,
+                          UserRole,
+                          $UserRolesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._userRolesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userRolesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'user_id',
+                          typedResults: items,
+                        ),
+                      if (userBranchesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          User,
+                          $UsersTable,
+                          UserBranche,
+                          $UserBranchesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._userBranchesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).userBranchesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'user_id',
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (userRolesRefs)
-                    await $_getPrefetchedDataByColumns<
-                      User,
-                      $UsersTable,
-                      UserRole,
-                      $UserRolesTable
-                    >(
-                      currentTable: table,
-                      referencedTable: $$UsersTableReferences
-                          ._userRolesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$UsersTableReferences(db, table, p0).userRolesRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'user_id',
-                      typedResults: items,
-                    ),
-                ];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -4534,7 +5024,11 @@ typedef $$UsersTableProcessedTableManager =
       $$UsersTableUpdateCompanionBuilder,
       (User, $$UsersTableReferences),
       User,
-      PrefetchHooks Function({bool businessId, bool userRolesRefs})
+      PrefetchHooks Function({
+        bool businessId,
+        bool userRolesRefs,
+        bool userBranchesRefs,
+      })
     >;
 typedef $$RolesTableCreateCompanionBuilder = RolesCompanion Function({
   required String id,
@@ -6177,6 +6671,367 @@ typedef $$UserRolesTableProcessedTableManager =
       UserRole,
       PrefetchHooks Function({bool userId, bool roleId})
     >;
+typedef $$UserBranchesTableCreateCompanionBuilder =
+    UserBranchesCompanion Function({
+      required String userId,
+      required String branchId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$UserBranchesTableUpdateCompanionBuilder =
+    UserBranchesCompanion Function({
+      Value<String> userId,
+      Value<String> branchId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$UserBranchesTableReferences
+    extends BaseReferences<_$AppDatabase, $UserBranchesTable, UserBranche> {
+  $$UserBranchesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UsersTable _userIdTable(_$AppDatabase db) =>
+      db.users.createAlias('user_branches__user_id__users__id');
+
+  $$UsersTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<String>('user_id')!;
+
+    final manager = $$UsersTableTableManager(
+      $_db,
+      $_db.users,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias('user_branches__branch_id__branches__id');
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<String>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UserBranchesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserBranchesTable> {
+  $$UserBranchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UsersTableFilterComposer get userId {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableFilterComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserBranchesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserBranchesTable> {
+  $$UserBranchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$UsersTableOrderingComposer get userId {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserBranchesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserBranchesTable> {
+  $$UserBranchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$UsersTableAnnotationComposer get userId {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UserBranchesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserBranchesTable,
+          UserBranche,
+          $$UserBranchesTableFilterComposer,
+          $$UserBranchesTableOrderingComposer,
+          $$UserBranchesTableAnnotationComposer,
+          $$UserBranchesTableCreateCompanionBuilder,
+          $$UserBranchesTableUpdateCompanionBuilder,
+          (UserBranche, $$UserBranchesTableReferences),
+          UserBranche,
+          PrefetchHooks Function({bool userId, bool branchId})
+        > {
+  $$UserBranchesTableTableManager(_$AppDatabase db, $UserBranchesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserBranchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserBranchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserBranchesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserBranchesCompanion(
+                userId: userId,
+                branchId: branchId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required String branchId,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => UserBranchesCompanion.insert(
+                userId: userId,
+                branchId: branchId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$UserBranchesTable, UserBranche>(table),
+                  $$UserBranchesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({userId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (userId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.userId,
+                        referencedTable: $$UserBranchesTableReferences
+                            ._userIdTable(db),
+                        referencedColumn: $$UserBranchesTableReferences
+                            ._userIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (branchId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.branchId,
+                        referencedTable: $$UserBranchesTableReferences
+                            ._branchIdTable(db),
+                        referencedColumn: $$UserBranchesTableReferences
+                            ._branchIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserBranchesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserBranchesTable,
+      UserBranche,
+      $$UserBranchesTableFilterComposer,
+      $$UserBranchesTableOrderingComposer,
+      $$UserBranchesTableAnnotationComposer,
+      $$UserBranchesTableCreateCompanionBuilder,
+      $$UserBranchesTableUpdateCompanionBuilder,
+      (UserBranche, $$UserBranchesTableReferences),
+      UserBranche,
+      PrefetchHooks Function({bool userId, bool branchId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6195,4 +7050,6 @@ class $AppDatabaseManager {
       $$RolePermissionsTableTableManager(_db, _db.rolePermissions);
   $$UserRolesTableTableManager get userRoles =>
       $$UserRolesTableTableManager(_db, _db.userRoles);
+  $$UserBranchesTableTableManager get userBranches =>
+      $$UserBranchesTableTableManager(_db, _db.userBranches);
 }
