@@ -3346,6 +3346,697 @@ class UserBranchesCompanion extends UpdateCompanion<UserBranche> {
   }
 }
 
+class $DevicesTable extends Devices with TableInfo<$DevicesTable, Device> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DevicesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES business_settings (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _deviceNameMeta = const VerificationMeta(
+    'deviceName',
+  );
+  @override
+  late final GeneratedColumn<String> deviceName = GeneratedColumn<String>(
+    'device_name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 2,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceTypeMeta = const VerificationMeta(
+    'deviceType',
+  );
+  @override
+  late final GeneratedColumn<String> deviceType = GeneratedColumn<String>(
+    'device_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('android'),
+  );
+  static const VerificationMeta _deviceIdentifierMeta = const VerificationMeta(
+    'deviceIdentifier',
+  );
+  @override
+  late final GeneratedColumn<String> deviceIdentifier = GeneratedColumn<String>(
+    'device_identifier',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 10,
+      maxTextLength: 255,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _publicKeyMeta = const VerificationMeta(
+    'publicKey',
+  );
+  @override
+  late final GeneratedColumn<String> publicKey = GeneratedColumn<String>(
+    'public_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _registeredAtMeta = const VerificationMeta(
+    'registeredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> registeredAt = GeneratedColumn<DateTime>(
+    'registered_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastSeenAtMeta = const VerificationMeta(
+    'lastSeenAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSeenAt = GeneratedColumn<DateTime>(
+    'last_seen_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    deviceName,
+    deviceType,
+    deviceIdentifier,
+    publicKey,
+    isActive,
+    registeredAt,
+    lastSeenAt,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'devices';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Device> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('device_name')) {
+      context.handle(
+        _deviceNameMeta,
+        deviceName.isAcceptableOrUnknown(data['device_name']!, _deviceNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceNameMeta);
+    }
+    if (data.containsKey('device_type')) {
+      context.handle(
+        _deviceTypeMeta,
+        deviceType.isAcceptableOrUnknown(data['device_type']!, _deviceTypeMeta),
+      );
+    }
+    if (data.containsKey('device_identifier')) {
+      context.handle(
+        _deviceIdentifierMeta,
+        deviceIdentifier.isAcceptableOrUnknown(
+          data['device_identifier']!,
+          _deviceIdentifierMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdentifierMeta);
+    }
+    if (data.containsKey('public_key')) {
+      context.handle(
+        _publicKeyMeta,
+        publicKey.isAcceptableOrUnknown(data['public_key']!, _publicKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_publicKeyMeta);
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('registered_at')) {
+      context.handle(
+        _registeredAtMeta,
+        registeredAt.isAcceptableOrUnknown(
+          data['registered_at']!,
+          _registeredAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_registeredAtMeta);
+    }
+    if (data.containsKey('last_seen_at')) {
+      context.handle(
+        _lastSeenAtMeta,
+        lastSeenAt.isAcceptableOrUnknown(
+          data['last_seen_at']!,
+          _lastSeenAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {businessId, deviceIdentifier},
+  ];
+  @override
+  Device map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Device(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      deviceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_name'],
+      )!,
+      deviceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_type'],
+      )!,
+      deviceIdentifier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_identifier'],
+      )!,
+      publicKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}public_key'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      registeredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}registered_at'],
+      )!,
+      lastSeenAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_seen_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DevicesTable createAlias(String alias) {
+    return $DevicesTable(attachedDatabase, alias);
+  }
+}
+
+class Device extends DataClass implements Insertable<Device> {
+  final String id;
+  final String businessId;
+  final String deviceName;
+  final String deviceType;
+  final String deviceIdentifier;
+  final String publicKey;
+  final bool isActive;
+  final DateTime registeredAt;
+  final DateTime? lastSeenAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const Device({
+    required this.id,
+    required this.businessId,
+    required this.deviceName,
+    required this.deviceType,
+    required this.deviceIdentifier,
+    required this.publicKey,
+    required this.isActive,
+    required this.registeredAt,
+    this.lastSeenAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['device_name'] = Variable<String>(deviceName);
+    map['device_type'] = Variable<String>(deviceType);
+    map['device_identifier'] = Variable<String>(deviceIdentifier);
+    map['public_key'] = Variable<String>(publicKey);
+    map['is_active'] = Variable<bool>(isActive);
+    map['registered_at'] = Variable<DateTime>(registeredAt);
+    if (!nullToAbsent || lastSeenAt != null) {
+      map['last_seen_at'] = Variable<DateTime>(lastSeenAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DevicesCompanion toCompanion(bool nullToAbsent) {
+    return DevicesCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      deviceName: Value(deviceName),
+      deviceType: Value(deviceType),
+      deviceIdentifier: Value(deviceIdentifier),
+      publicKey: Value(publicKey),
+      isActive: Value(isActive),
+      registeredAt: Value(registeredAt),
+      lastSeenAt: lastSeenAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSeenAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Device.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Device(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      deviceName: serializer.fromJson<String>(json['deviceName']),
+      deviceType: serializer.fromJson<String>(json['deviceType']),
+      deviceIdentifier: serializer.fromJson<String>(json['deviceIdentifier']),
+      publicKey: serializer.fromJson<String>(json['publicKey']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      registeredAt: serializer.fromJson<DateTime>(json['registeredAt']),
+      lastSeenAt: serializer.fromJson<DateTime?>(json['lastSeenAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'deviceName': serializer.toJson<String>(deviceName),
+      'deviceType': serializer.toJson<String>(deviceType),
+      'deviceIdentifier': serializer.toJson<String>(deviceIdentifier),
+      'publicKey': serializer.toJson<String>(publicKey),
+      'isActive': serializer.toJson<bool>(isActive),
+      'registeredAt': serializer.toJson<DateTime>(registeredAt),
+      'lastSeenAt': serializer.toJson<DateTime?>(lastSeenAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Device copyWith({
+    String? id,
+    String? businessId,
+    String? deviceName,
+    String? deviceType,
+    String? deviceIdentifier,
+    String? publicKey,
+    bool? isActive,
+    DateTime? registeredAt,
+    Value<DateTime?> lastSeenAt = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => Device(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    deviceName: deviceName ?? this.deviceName,
+    deviceType: deviceType ?? this.deviceType,
+    deviceIdentifier: deviceIdentifier ?? this.deviceIdentifier,
+    publicKey: publicKey ?? this.publicKey,
+    isActive: isActive ?? this.isActive,
+    registeredAt: registeredAt ?? this.registeredAt,
+    lastSeenAt: lastSeenAt.present ? lastSeenAt.value : this.lastSeenAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  Device copyWithCompanion(DevicesCompanion data) {
+    return Device(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      deviceName: data.deviceName.present
+          ? data.deviceName.value
+          : this.deviceName,
+      deviceType: data.deviceType.present
+          ? data.deviceType.value
+          : this.deviceType,
+      deviceIdentifier: data.deviceIdentifier.present
+          ? data.deviceIdentifier.value
+          : this.deviceIdentifier,
+      publicKey: data.publicKey.present ? data.publicKey.value : this.publicKey,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      registeredAt: data.registeredAt.present
+          ? data.registeredAt.value
+          : this.registeredAt,
+      lastSeenAt: data.lastSeenAt.present
+          ? data.lastSeenAt.value
+          : this.lastSeenAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Device(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('deviceName: $deviceName, ')
+          ..write('deviceType: $deviceType, ')
+          ..write('deviceIdentifier: $deviceIdentifier, ')
+          ..write('publicKey: $publicKey, ')
+          ..write('isActive: $isActive, ')
+          ..write('registeredAt: $registeredAt, ')
+          ..write('lastSeenAt: $lastSeenAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    deviceName,
+    deviceType,
+    deviceIdentifier,
+    publicKey,
+    isActive,
+    registeredAt,
+    lastSeenAt,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Device &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.deviceName == this.deviceName &&
+          other.deviceType == this.deviceType &&
+          other.deviceIdentifier == this.deviceIdentifier &&
+          other.publicKey == this.publicKey &&
+          other.isActive == this.isActive &&
+          other.registeredAt == this.registeredAt &&
+          other.lastSeenAt == this.lastSeenAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DevicesCompanion extends UpdateCompanion<Device> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> deviceName;
+  final Value<String> deviceType;
+  final Value<String> deviceIdentifier;
+  final Value<String> publicKey;
+  final Value<bool> isActive;
+  final Value<DateTime> registeredAt;
+  final Value<DateTime?> lastSeenAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const DevicesCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.deviceName = const Value.absent(),
+    this.deviceType = const Value.absent(),
+    this.deviceIdentifier = const Value.absent(),
+    this.publicKey = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.registeredAt = const Value.absent(),
+    this.lastSeenAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DevicesCompanion.insert({
+    required String id,
+    required String businessId,
+    required String deviceName,
+    this.deviceType = const Value.absent(),
+    required String deviceIdentifier,
+    required String publicKey,
+    this.isActive = const Value.absent(),
+    required DateTime registeredAt,
+    this.lastSeenAt = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       deviceName = Value(deviceName),
+       deviceIdentifier = Value(deviceIdentifier),
+       publicKey = Value(publicKey),
+       registeredAt = Value(registeredAt),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<Device> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? deviceName,
+    Expression<String>? deviceType,
+    Expression<String>? deviceIdentifier,
+    Expression<String>? publicKey,
+    Expression<bool>? isActive,
+    Expression<DateTime>? registeredAt,
+    Expression<DateTime>? lastSeenAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (deviceName != null) 'device_name': deviceName,
+      if (deviceType != null) 'device_type': deviceType,
+      if (deviceIdentifier != null) 'device_identifier': deviceIdentifier,
+      if (publicKey != null) 'public_key': publicKey,
+      if (isActive != null) 'is_active': isActive,
+      if (registeredAt != null) 'registered_at': registeredAt,
+      if (lastSeenAt != null) 'last_seen_at': lastSeenAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DevicesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? deviceName,
+    Value<String>? deviceType,
+    Value<String>? deviceIdentifier,
+    Value<String>? publicKey,
+    Value<bool>? isActive,
+    Value<DateTime>? registeredAt,
+    Value<DateTime?>? lastSeenAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return DevicesCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      deviceName: deviceName ?? this.deviceName,
+      deviceType: deviceType ?? this.deviceType,
+      deviceIdentifier: deviceIdentifier ?? this.deviceIdentifier,
+      publicKey: publicKey ?? this.publicKey,
+      isActive: isActive ?? this.isActive,
+      registeredAt: registeredAt ?? this.registeredAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (deviceName.present) {
+      map['device_name'] = Variable<String>(deviceName.value);
+    }
+    if (deviceType.present) {
+      map['device_type'] = Variable<String>(deviceType.value);
+    }
+    if (deviceIdentifier.present) {
+      map['device_identifier'] = Variable<String>(deviceIdentifier.value);
+    }
+    if (publicKey.present) {
+      map['public_key'] = Variable<String>(publicKey.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (registeredAt.present) {
+      map['registered_at'] = Variable<DateTime>(registeredAt.value);
+    }
+    if (lastSeenAt.present) {
+      map['last_seen_at'] = Variable<DateTime>(lastSeenAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DevicesCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('deviceName: $deviceName, ')
+          ..write('deviceType: $deviceType, ')
+          ..write('deviceIdentifier: $deviceIdentifier, ')
+          ..write('publicKey: $publicKey, ')
+          ..write('isActive: $isActive, ')
+          ..write('registeredAt: $registeredAt, ')
+          ..write('lastSeenAt: $lastSeenAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3361,6 +4052,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $UserRolesTable userRoles = $UserRolesTable(this);
   late final $UserBranchesTable userBranches = $UserBranchesTable(this);
+  late final $DevicesTable devices = $DevicesTable(this);
   late final Index branchesBusinessCodeUnique = Index(
     'branches_business_code_unique',
     'CREATE UNIQUE INDEX branches_business_code_unique ON branches (business_id, code)',
@@ -3389,6 +4081,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'user_branches_branch_id_index',
     'CREATE INDEX user_branches_branch_id_index ON user_branches (branch_id)',
   );
+  late final Index devicesBusinessIdIndex = Index(
+    'devices_business_id_index',
+    'CREATE INDEX devices_business_id_index ON devices (business_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3402,6 +4098,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     rolePermissions,
     userRoles,
     userBranches,
+    devices,
     branchesBusinessCodeUnique,
     usersBusinessUsernameUnique,
     rolesBusinessSlugUnique,
@@ -3409,6 +4106,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     rolePermissionsPermissionIdIndex,
     userRolesRoleIdIndex,
     userBranchesBranchIdIndex,
+    devicesBusinessIdIndex,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3453,6 +4151,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('user_branches', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'business_settings',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('devices', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -3537,6 +4242,25 @@ final class $$BusinessSettingsTableReferences
     ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_rolesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$DevicesTable, List<Device>> _devicesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.devices,
+    aliasName: 'business_settings__id__devices__business_id',
+  );
+
+  $$DevicesTableProcessedTableManager get devicesRefs {
+    final manager = $$DevicesTableTableManager(
+      $_db,
+      $_db.devices,
+    ).filter((f) => f.businessId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_devicesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -3643,6 +4367,31 @@ class $$BusinessSettingsTableFilterComposer
           }) => $$RolesTableFilterComposer(
             $db: $db,
             $table: $db.roles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> devicesRefs(
+    Expression<bool> Function($$DevicesTableFilterComposer f) f,
+  ) {
+    final $$DevicesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.devices,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DevicesTableFilterComposer(
+            $db: $db,
+            $table: $db.devices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3790,6 +4539,31 @@ class $$BusinessSettingsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> devicesRefs<T extends Object>(
+    Expression<T> Function($$DevicesTableAnnotationComposer a) f,
+  ) {
+    final $$DevicesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.devices,
+      getReferencedColumn: (t) => t.businessId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DevicesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.devices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BusinessSettingsTableTableManager
@@ -3809,6 +4583,7 @@ class $$BusinessSettingsTableTableManager
             bool branchesRefs,
             bool usersRefs,
             bool rolesRefs,
+            bool devicesRefs,
           })
         > {
   $$BusinessSettingsTableTableManager(
@@ -3865,13 +4640,19 @@ class $$BusinessSettingsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({branchesRefs = false, usersRefs = false, rolesRefs = false}) {
+              ({
+                branchesRefs = false,
+                usersRefs = false,
+                rolesRefs = false,
+                devicesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (branchesRefs) db.branches,
                     if (usersRefs) db.users,
                     if (rolesRefs) db.roles,
+                    if (devicesRefs) db.devices,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3936,6 +4717,26 @@ class $$BusinessSettingsTableTableManager
                           referencedColumn: 'business_id',
                           typedResults: items,
                         ),
+                      if (devicesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          BusinessSetting,
+                          $BusinessSettingsTable,
+                          Device,
+                          $DevicesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BusinessSettingsTableReferences
+                              ._devicesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BusinessSettingsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).devicesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'business_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3960,6 +4761,7 @@ typedef $$BusinessSettingsTableProcessedTableManager =
         bool branchesRefs,
         bool usersRefs,
         bool rolesRefs,
+        bool devicesRefs,
       })
     >;
 typedef $$BranchesTableCreateCompanionBuilder = BranchesCompanion Function({
@@ -7032,6 +7834,444 @@ typedef $$UserBranchesTableProcessedTableManager =
       UserBranche,
       PrefetchHooks Function({bool userId, bool branchId})
     >;
+typedef $$DevicesTableCreateCompanionBuilder = DevicesCompanion Function({
+  required String id,
+  required String businessId,
+  required String deviceName,
+  Value<String> deviceType,
+  required String deviceIdentifier,
+  required String publicKey,
+  Value<bool> isActive,
+  required DateTime registeredAt,
+  Value<DateTime?> lastSeenAt,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$DevicesTableUpdateCompanionBuilder = DevicesCompanion Function({
+  Value<String> id,
+  Value<String> businessId,
+  Value<String> deviceName,
+  Value<String> deviceType,
+  Value<String> deviceIdentifier,
+  Value<String> publicKey,
+  Value<bool> isActive,
+  Value<DateTime> registeredAt,
+  Value<DateTime?> lastSeenAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+final class $$DevicesTableReferences
+    extends BaseReferences<_$AppDatabase, $DevicesTable, Device> {
+  $$DevicesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BusinessSettingsTable _businessIdTable(_$AppDatabase db) => db
+      .businessSettings
+      .createAlias('devices__business_id__business_settings__id');
+
+  $$BusinessSettingsTableProcessedTableManager get businessId {
+    final $_column = $_itemColumn<String>('business_id')!;
+
+    final manager = $$BusinessSettingsTableTableManager(
+      $_db,
+      $_db.businessSettings,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_businessIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DevicesTableFilterComposer
+    extends Composer<_$AppDatabase, $DevicesTable> {
+  $$DevicesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceName => $composableBuilder(
+    column: $table.deviceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceType => $composableBuilder(
+    column: $table.deviceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceIdentifier => $composableBuilder(
+    column: $table.deviceIdentifier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get publicKey => $composableBuilder(
+    column: $table.publicKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get registeredAt => $composableBuilder(
+    column: $table.registeredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSeenAt => $composableBuilder(
+    column: $table.lastSeenAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BusinessSettingsTableFilterComposer get businessId {
+    final $$BusinessSettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businessSettings,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessSettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.businessSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DevicesTableOrderingComposer
+    extends Composer<_$AppDatabase, $DevicesTable> {
+  $$DevicesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceName => $composableBuilder(
+    column: $table.deviceName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceType => $composableBuilder(
+    column: $table.deviceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceIdentifier => $composableBuilder(
+    column: $table.deviceIdentifier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get publicKey => $composableBuilder(
+    column: $table.publicKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get registeredAt => $composableBuilder(
+    column: $table.registeredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSeenAt => $composableBuilder(
+    column: $table.lastSeenAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BusinessSettingsTableOrderingComposer get businessId {
+    final $$BusinessSettingsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businessSettings,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessSettingsTableOrderingComposer(
+            $db: $db,
+            $table: $db.businessSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DevicesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DevicesTable> {
+  $$DevicesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceName => $composableBuilder(
+    column: $table.deviceName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceType => $composableBuilder(
+    column: $table.deviceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceIdentifier => $composableBuilder(
+    column: $table.deviceIdentifier,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get publicKey =>
+      $composableBuilder(column: $table.publicKey, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get registeredAt => $composableBuilder(
+    column: $table.registeredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSeenAt => $composableBuilder(
+    column: $table.lastSeenAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$BusinessSettingsTableAnnotationComposer get businessId {
+    final $$BusinessSettingsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.businessId,
+      referencedTable: $db.businessSettings,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BusinessSettingsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.businessSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DevicesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DevicesTable,
+          Device,
+          $$DevicesTableFilterComposer,
+          $$DevicesTableOrderingComposer,
+          $$DevicesTableAnnotationComposer,
+          $$DevicesTableCreateCompanionBuilder,
+          $$DevicesTableUpdateCompanionBuilder,
+          (Device, $$DevicesTableReferences),
+          Device,
+          PrefetchHooks Function({bool businessId})
+        > {
+  $$DevicesTableTableManager(_$AppDatabase db, $DevicesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DevicesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DevicesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DevicesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> deviceName = const Value.absent(),
+                Value<String> deviceType = const Value.absent(),
+                Value<String> deviceIdentifier = const Value.absent(),
+                Value<String> publicKey = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> registeredAt = const Value.absent(),
+                Value<DateTime?> lastSeenAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DevicesCompanion(
+                id: id,
+                businessId: businessId,
+                deviceName: deviceName,
+                deviceType: deviceType,
+                deviceIdentifier: deviceIdentifier,
+                publicKey: publicKey,
+                isActive: isActive,
+                registeredAt: registeredAt,
+                lastSeenAt: lastSeenAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String deviceName,
+                Value<String> deviceType = const Value.absent(),
+                required String deviceIdentifier,
+                required String publicKey,
+                Value<bool> isActive = const Value.absent(),
+                required DateTime registeredAt,
+                Value<DateTime?> lastSeenAt = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DevicesCompanion.insert(
+                id: id,
+                businessId: businessId,
+                deviceName: deviceName,
+                deviceType: deviceType,
+                deviceIdentifier: deviceIdentifier,
+                publicKey: publicKey,
+                isActive: isActive,
+                registeredAt: registeredAt,
+                lastSeenAt: lastSeenAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$DevicesTable, Device>(table),
+                  $$DevicesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({businessId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (businessId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.businessId,
+                        referencedTable: $$DevicesTableReferences
+                            ._businessIdTable(db),
+                        referencedColumn: $$DevicesTableReferences
+                            ._businessIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DevicesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DevicesTable,
+      Device,
+      $$DevicesTableFilterComposer,
+      $$DevicesTableOrderingComposer,
+      $$DevicesTableAnnotationComposer,
+      $$DevicesTableCreateCompanionBuilder,
+      $$DevicesTableUpdateCompanionBuilder,
+      (Device, $$DevicesTableReferences),
+      Device,
+      PrefetchHooks Function({bool businessId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7052,4 +8292,6 @@ class $AppDatabaseManager {
       $$UserRolesTableTableManager(_db, _db.userRoles);
   $$UserBranchesTableTableManager get userBranches =>
       $$UserBranchesTableTableManager(_db, _db.userBranches);
+  $$DevicesTableTableManager get devices =>
+      $$DevicesTableTableManager(_db, _db.devices);
 }

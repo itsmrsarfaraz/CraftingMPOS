@@ -66,6 +66,7 @@ void main() {
     );
   }
 
+  
   Future<void> createBranchFixture({
     String businessId = 'business-001',
     String branchId = 'branch-001',
@@ -78,6 +79,26 @@ void main() {
         businessId: businessId,
         name: name,
         code: code,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  Future<void> createDeviceFixture({
+    String businessId = 'business-001',
+    String deviceId = 'device-001',
+    String deviceIdentifier = 'android-device-001',
+    String deviceName = 'Main Counter',
+  }) async {
+    await database.createDevice(
+      DevicesCompanion.insert(
+        id: deviceId,
+        businessId: businessId,
+        deviceName: deviceName,
+        deviceIdentifier: deviceIdentifier,
+        publicKey: 'test-public-key-$deviceId',
+        registeredAt: DateTime.now(),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
@@ -977,5 +998,22 @@ void main() {
       assignments.map((assignment) => assignment.branchId),
       containsAll(['branch-001', 'branch-002']),
     );
+  });
+
+  test('Database can register and retrieve a device', () async {
+    await createRoleFixture();
+    await createDeviceFixture();
+
+    final device = await database.getDeviceByIdentifier(
+      'business-001',
+      'android-device-001',
+    );
+
+    expect(device, isNotNull);
+    expect(device!.id, 'device-001');
+    expect(device.businessId, 'business-001');
+    expect(device.deviceName, 'Main Counter');
+    expect(device.deviceType, 'android');
+    expect(device.isActive, isTrue);
   });
 }

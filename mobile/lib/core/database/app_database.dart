@@ -9,6 +9,7 @@ import 'tables/permissions.dart';
 import 'tables/role_permissions.dart';
 import 'tables/user_roles.dart';
 import 'tables/user_branches.dart';
+import 'tables/devices.dart';
 
 part 'app_database.g.dart';
 
@@ -22,6 +23,7 @@ part 'app_database.g.dart';
     RolePermissions,
     UserRoles,
     UserBranches,
+    Devices,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -29,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'crafting_mpos'));
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -73,6 +75,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 9) {
         await migrator.createTable(userBranches);
         await migrator.createIndex(userBranchesBranchIdIndex);
+      }
+
+      if (from < 10) {
+        await migrator.createTable(devices);
+        await migrator.createIndex(devicesBusinessIdIndex);
       }
     },
     beforeOpen: (OpeningDetails details) async {
@@ -304,5 +311,47 @@ class AppDatabase extends _$AppDatabase {
             .getSingleOrNull();
 
     return assignment != null;
+  }
+
+  // Device Management
+
+  Future<int> createDevice(DevicesCompanion device) {
+    return into(devices).insert(device);
+  }
+
+  Future<List<Device>> getDevicesForBusiness(String businessId) {
+    return (select(
+      devices,
+    )..where((device) => device.businessId.equals(businessId))).get();
+  }
+
+  Future<Device?> getDeviceByIdentifier(
+    String businessId,
+    String deviceIdentifier,
+  ) {
+    return (select(devices)..where(
+          (device) =>
+              device.businessId.equals(businessId) &
+              device.deviceIdentifier.equals(deviceIdentifier),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<int> updateDeviceLastSeen(String deviceId) {
+    final now = DateTime.now();
+
+    return (update(devices)..where((device) => device.id.equals(deviceId)))
+        .write(DevicesCompanion(lastSeenAt: Value(now), updatedAt: Value(now)));
+  }
+
+  Future<int> setDeviceActive(String deviceId, bool isActive) {
+    return (update(
+      devices,
+    )..where((device) => device.id.equals(deviceId))).write(
+      DevicesCompanion(
+        isActive: Value(isActive),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 }
