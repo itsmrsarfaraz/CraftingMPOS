@@ -1488,4 +1488,756 @@ void main() {
       );
     });
   });
+
+  group('Product Management', () {
+    test('Create and retrieve a product within its business', () async {
+      await createCategoryFixture();
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-001',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'Mineral Water',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      final products = await database.select(database.products).get();
+
+      expect(products, hasLength(1));
+      expect(products.first.id, 'product-001');
+      expect(products.first.businessId, 'business-001');
+      expect(products.first.categoryId, 'category-001');
+      expect(products.first.name, 'Mineral Water');
+      expect(products.first.isActive, isTrue);
+    });
+    test('A product cannot reference another business category', () async {
+      await createCategoryFixture();
+
+      await createCategoryFixture(
+        businessId: 'business-002',
+        categoryId: 'category-002',
+        name: 'Electronics',
+      );
+
+      final now = DateTime.now();
+
+      expect(
+        () => database
+            .into(database.products)
+            .insert(
+              ProductsCompanion.insert(
+                id: 'product-002',
+                businessId: 'business-001',
+                categoryId: const Value('category-002'),
+                name: 'Wireless Mouse',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test(
+      'A product can have multiple variants with different prices',
+      () async {
+        await createCategoryFixture();
+
+        final now = DateTime.now();
+
+        await database
+            .into(database.products)
+            .insert(
+              ProductsCompanion.insert(
+                id: 'product-003',
+                businessId: 'business-001',
+                categoryId: const Value('category-001'),
+                name: 'Classic T-Shirt',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: 'variant-small',
+                businessId: 'business-001',
+                productId: 'product-003',
+                name: 'Small',
+                sku: const Value('TSHIRT-S'),
+                costPrice: 50000,
+                sellingPrice: 75000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: 'variant-large',
+                businessId: 'business-001',
+                productId: 'product-003',
+                name: 'Large',
+                sku: const Value('TSHIRT-L'),
+                costPrice: 60000,
+                sellingPrice: 90000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        final variants = await (database.select(
+          database.productVariants,
+        )..where((variant) => variant.productId.equals('product-003'))).get();
+
+        expect(variants, hasLength(2));
+
+        expect(
+          variants.map((variant) => variant.name).toSet(),
+          containsAll(['Small', 'Large']),
+        );
+
+        final small = variants.firstWhere(
+          (variant) => variant.id == 'variant-small',
+        );
+        final large = variants.firstWhere(
+          (variant) => variant.id == 'variant-large',
+        );
+
+        expect(small.sku, 'TSHIRT-S');
+        expect(small.costPrice, 50000);
+        expect(small.sellingPrice, 75000);
+
+        expect(large.sku, 'TSHIRT-L');
+        expect(large.costPrice, 60000);
+        expect(large.sellingPrice, 90000);
+      },
+    );
+
+    test('Duplicate variant SKUs within a business are rejected', () async {
+      await createCategoryFixture();
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-004',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'First Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-005',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'Second Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-004',
+              businessId: 'business-001',
+              productId: 'product-004',
+              name: 'Default',
+              sku: const Value('SHARED-SKU'),
+              costPrice: 10000,
+              sellingPrice: 15000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      expect(
+        () => database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: 'variant-005',
+                businessId: 'business-001',
+                productId: 'product-005',
+                name: 'Default',
+                sku: const Value('SHARED-SKU'),
+                costPrice: 12000,
+                sellingPrice: 18000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('Different businesses can reuse the same variant SKU', () async {
+      await createCategoryFixture();
+
+      await createCategoryFixture(
+        businessId: 'business-002',
+        categoryId: 'category-002',
+        name: 'Electronics',
+      );
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-006',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'First Store Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-007',
+              businessId: 'business-002',
+              categoryId: const Value('category-002'),
+              name: 'Second Store Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-006',
+              businessId: 'business-001',
+              productId: 'product-006',
+              name: 'Default',
+              sku: const Value('ITEM-001'),
+              costPrice: 10000,
+              sellingPrice: 15000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-007',
+              businessId: 'business-002',
+              productId: 'product-007',
+              name: 'Default',
+              sku: const Value('ITEM-001'),
+              costPrice: 12000,
+              sellingPrice: 18000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      final variants = await database.select(database.productVariants).get();
+
+      expect(variants, hasLength(2));
+      expect(variants.map((variant) => variant.sku).toSet(), {'ITEM-001'});
+      expect(variants.map((variant) => variant.businessId).toSet(), {
+        'business-001',
+        'business-002',
+      });
+    });
+
+    test('Duplicate barcodes within a business are rejected', () async {
+      await createCategoryFixture();
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-008',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'First Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-009',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'Second Product',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      for (final entry in [
+        ('variant-008', 'product-008'),
+        ('variant-009', 'product-009'),
+      ]) {
+        await database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: entry.$1,
+                businessId: 'business-001',
+                productId: entry.$2,
+                name: 'Default',
+                costPrice: 10000,
+                sellingPrice: 15000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      }
+
+      await database
+          .into(database.productCodes)
+          .insert(
+            ProductCodesCompanion.insert(
+              id: 'code-008',
+              businessId: 'business-001',
+              variantId: 'variant-008',
+              code: '1234567890123',
+              isPrimary: const Value(true),
+              createdAt: now,
+            ),
+          );
+
+      expect(
+        () => database
+            .into(database.productCodes)
+            .insert(
+              ProductCodesCompanion.insert(
+                id: 'code-009',
+                businessId: 'business-001',
+                variantId: 'variant-009',
+                code: '1234567890123',
+                isPrimary: const Value(true),
+                createdAt: now,
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('A variant can have multiple barcodes but only one primary', () async {
+      await createCategoryFixture();
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-010',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'Coffee 250g',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-010',
+              businessId: 'business-001',
+              productId: 'product-010',
+              name: 'Default',
+              costPrice: 25000,
+              sellingPrice: 35000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productCodes)
+          .insert(
+            ProductCodesCompanion.insert(
+              id: 'code-010',
+              businessId: 'business-001',
+              variantId: 'variant-010',
+              code: '890100000001',
+              isPrimary: const Value(true),
+              createdAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productCodes)
+          .insert(
+            ProductCodesCompanion.insert(
+              id: 'code-011',
+              businessId: 'business-001',
+              variantId: 'variant-010',
+              code: '890100000002',
+              isPrimary: const Value(false),
+              createdAt: now,
+            ),
+          );
+
+      final codes = await (database.select(
+        database.productCodes,
+      )..where((code) => code.variantId.equals('variant-010'))).get();
+
+      expect(codes, hasLength(2));
+      expect(codes.where((code) => code.isPrimary), hasLength(1));
+      expect(codes.map((code) => code.code).toSet(), {
+        '890100000001',
+        '890100000002',
+      });
+
+      expect(
+        () => database
+            .into(database.productCodes)
+            .insert(
+              ProductCodesCompanion.insert(
+                id: 'code-012',
+                businessId: 'business-001',
+                variantId: 'variant-010',
+                code: '890100000003',
+                isPrimary: const Value(true),
+                createdAt: now,
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('A variant maintains independent stock for each branch', () async {
+      await createCategoryFixture();
+      await createBranchFixture();
+
+      await createBranchFixture(
+        branchId: 'branch-002',
+        code: 'SECOND',
+        name: 'Second Branch',
+      );
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-011',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'Rice 1kg',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-011',
+              businessId: 'business-001',
+              productId: 'product-011',
+              name: 'Default',
+              costPrice: 20000,
+              sellingPrice: 25000,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.branchStocks)
+          .insert(
+            BranchStocksCompanion.insert(
+              id: 'stock-001',
+              businessId: 'business-001',
+              branchId: 'branch-001',
+              variantId: 'variant-011',
+              quantityMilliunits: const Value(25000),
+              updatedAt: now,
+            ),
+          );
+
+      await database
+          .into(database.branchStocks)
+          .insert(
+            BranchStocksCompanion.insert(
+              id: 'stock-002',
+              businessId: 'business-001',
+              branchId: 'branch-002',
+              variantId: 'variant-011',
+              quantityMilliunits: const Value(12500),
+              updatedAt: now,
+            ),
+          );
+
+      final stocks = await (database.select(
+        database.branchStocks,
+      )..where((stock) => stock.variantId.equals('variant-011'))).get();
+
+      expect(stocks, hasLength(2));
+
+      final mainStock = stocks.firstWhere(
+        (stock) => stock.branchId == 'branch-001',
+      );
+
+      final secondStock = stocks.firstWhere(
+        (stock) => stock.branchId == 'branch-002',
+      );
+
+      expect(mainStock.quantityMilliunits, 25000);
+      expect(secondStock.quantityMilliunits, 12500);
+    });
+
+    test(
+      'A variant cannot have duplicate stock records for a branch',
+      () async {
+        await createCategoryFixture();
+        await createBranchFixture();
+
+        final now = DateTime.now();
+
+        await database
+            .into(database.products)
+            .insert(
+              ProductsCompanion.insert(
+                id: 'product-012',
+                businessId: 'business-001',
+                categoryId: const Value('category-001'),
+                name: 'Cooking Oil',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: 'variant-012',
+                businessId: 'business-001',
+                productId: 'product-012',
+                name: 'Default',
+                costPrice: 30000,
+                sellingPrice: 35000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.branchStocks)
+            .insert(
+              BranchStocksCompanion.insert(
+                id: 'stock-003',
+                businessId: 'business-001',
+                branchId: 'branch-001',
+                variantId: 'variant-012',
+                quantityMilliunits: const Value(5000),
+                updatedAt: now,
+              ),
+            );
+
+        expect(
+          () => database
+              .into(database.branchStocks)
+              .insert(
+                BranchStocksCompanion.insert(
+                  id: 'stock-004',
+                  businessId: 'business-001',
+                  branchId: 'branch-001',
+                  variantId: 'variant-012',
+                  quantityMilliunits: const Value(3000),
+                  updatedAt: now,
+                ),
+              ),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
+
+    test(
+      'Stock cannot reference a branch and variant from different businesses',
+      () async {
+        await createCategoryFixture();
+        await createBranchFixture();
+
+        await createCategoryFixture(
+          businessId: 'business-002',
+          categoryId: 'category-002',
+          name: 'Electronics',
+        );
+
+        await createBranchFixture(
+          businessId: 'business-002',
+          branchId: 'branch-002',
+          code: 'OTHER',
+          name: 'Other Business Branch',
+        );
+
+        final now = DateTime.now();
+
+        await database
+            .into(database.products)
+            .insert(
+              ProductsCompanion.insert(
+                id: 'product-013',
+                businessId: 'business-001',
+                categoryId: const Value('category-001'),
+                name: 'Product A',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: 'variant-013',
+                businessId: 'business-001',
+                productId: 'product-013',
+                name: 'Default',
+                costPrice: 10000,
+                sellingPrice: 15000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.products)
+            .insert(
+              ProductsCompanion.insert(
+                id: 'product-014',
+                businessId: 'business-002',
+                categoryId: const Value('category-002'),
+                name: 'Product B',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        await database
+            .into(database.productVariants)
+            .insert(
+              ProductVariantsCompanion.insert(
+                id: 'variant-014',
+                businessId: 'business-002',
+                productId: 'product-014',
+                name: 'Default',
+                costPrice: 20000,
+                sellingPrice: 25000,
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+
+        // Business A's branch cannot hold Business B's variant.
+        expect(
+          () => database
+              .into(database.branchStocks)
+              .insert(
+                BranchStocksCompanion.insert(
+                  id: 'stock-005',
+                  businessId: 'business-001',
+                  branchId: 'branch-001',
+                  variantId: 'variant-014',
+                  quantityMilliunits: const Value(5000),
+                  updatedAt: now,
+                ),
+              ),
+          throwsA(isA<Exception>()),
+        );
+
+        // Business A's variant cannot be assigned to Business B's branch.
+        expect(
+          () => database
+              .into(database.branchStocks)
+              .insert(
+                BranchStocksCompanion.insert(
+                  id: 'stock-006',
+                  businessId: 'business-001',
+                  branchId: 'branch-002',
+                  variantId: 'variant-013',
+                  quantityMilliunits: const Value(5000),
+                  updatedAt: now,
+                ),
+              ),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
+
+    test('A category cannot be deleted while products reference it', () async {
+      await createCategoryFixture();
+
+      final now = DateTime.now();
+
+      await database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-015',
+              businessId: 'business-001',
+              categoryId: const Value('category-001'),
+              name: 'Tea Pack',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      expect(
+        () =>
+            (database.delete(database.categories)..where(
+                  (category) =>
+                      category.id.equals('category-001') &
+                      category.businessId.equals('business-001'),
+                ))
+                .go(),
+        throwsA(isA<Exception>()),
+      );
+
+      final category = await database.getCategoryById(
+        'business-001',
+        'category-001',
+      );
+
+      expect(category, isNotNull);
+    });
+  });
 }
