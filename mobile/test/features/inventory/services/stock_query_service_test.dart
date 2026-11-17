@@ -88,17 +88,40 @@ void main() {
   Future<void> createStock({
     required String branch,
     required int quantity,
+    String stockVariantId = variantId,
   }) async {
     await database
         .into(database.branchStocks)
         .insert(
           BranchStocksCompanion.insert(
-            id: 'stock-$branch',
+            id: 'stock-$branch-$stockVariantId',
             businessId: businessId,
             branchId: branch,
-            variantId: variantId,
+            variantId: stockVariantId,
             quantityMilliunits: Value(quantity),
             updatedAt: DateTime.now(),
+          ),
+        );
+  }
+
+  Future<void> createVariant({
+    required String id,
+    required int costPrice,
+  }) async {
+    final now = DateTime.now();
+
+    await database
+        .into(database.productVariants)
+        .insert(
+          ProductVariantsCompanion.insert(
+            id: id,
+            businessId: businessId,
+            productId: 'product-001',
+            name: 'Variant $id',
+            costPrice: costPrice,
+            sellingPrice: costPrice + 5000,
+            createdAt: now,
+            updatedAt: now,
           ),
         );
   }
@@ -362,6 +385,151 @@ void main() {
         ),
         throwsArgumentError,
       );
+    });
+  });
+
+  group('Inventory Valuation', () {
+    test('Returns zero when inventory is empty', () async {
+      await createFixture();
+
+      final valuation = await service.getInventoryValuation(
+        businessId: businessId,
+      );
+
+      expect(valuation, 0);
+    });
+
+    test(
+      'Calculates valuation across multiple variants and branches',
+      () async {
+        await createFixture();
+
+        await createVariant(id: 'variant-002', costPrice: 20000);
+
+        await createStock(branch: branchId, quantity: 1500);
+
+        await createStock(
+          branch: secondBranchId,
+          quantity: 2500,
+          stockVariantId: 'variant-002',
+        );
+
+        final valuation = await service.getInventoryValuation(
+          businessId: businessId,
+        );
+
+        // 1.500 × 10000 + 2.500 × 20000 = 65000 paisa.
+        expect(valuation, 65000);
+      },
+    );
+
+    test('Calculates valuation for a specific branch', () async {
+      await createFixture();
+
+      await createVariant(id: 'variant-002', costPrice: 20000);
+
+      await createStock(branch: branchId, quantity: 1500);
+
+      await createStock(
+        branch: secondBranchId,
+        quantity: 2500,
+        stockVariantId: 'variant-002',
+      );
+
+      final valuation = await service.getInventoryValuation(
+        businessId: businessId,
+        branchId: branchId,
+      );
+
+      expect(valuation, 15000);
+    });
+
+    test('Rounds aggregate fractional paisa correctly', () async {
+      await createFixture();
+
+      await database
+          .update(database.productVariants)
+          .write(const ProductVariantsCompanion(costPrice: Value(500)));
+
+      await createStock(branch: branchId, quantity: 1);
+
+      final valuation = await service.getInventoryValuation(
+        businessId: businessId,
+      );
+
+      // 500 × 1 / 1000 = 0.5 paisa, rounded to 1 paisa.
+      expect(valuation, 1);
+    });
+
+    test('Includes inactive variants with existing stock', () async {
+      await createFixture();
+
+      await createStock(branch: branchId, quantity: 2000);
+
+      await (database.update(database.productVariants)
+            ..where((table) => table.id.equals(variantId)))
+          .write(const ProductVariantsCompanion(isActive: Value(false)));
+
+      final valuation = await service.getInventoryValuation(
+        businessId: businessId,
+      );
+
+      expect(valuation, 20000);
+    });
+
+    test('Returns zero for a branch without stock', () async {
+      await createFixture();
+
+      await createStock(branch: branchId, quantity: 5000);
+
+      final valuation = await service.getInventoryValuation(
+        businessId: businessId,
+        branchId: secondBranchId,
+      );
+
+      expect(valuation, 0);
+    });
+
+    test('Throws when negative stock exists', () async {
+      await createFixture();
+
+      await createStock(branch: branchId, quantity: -1000);
+
+      expect(
+        () => service.getInventoryValuation(businessId: businessId),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('Throws when inventory valuation exceeds int64 range', () async {
+      await createFixture();
+
+      await database
+          .update(database.productVariants)
+          .write(
+            const ProductVariantsCompanion(
+              costPrice: Value(9223372036854775807),
+            ),
+          );
+
+      await createStock(branch: branchId, quantity: 2000);
+
+      expect(
+        () => service.getInventoryValuation(businessId: businessId),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('Does not include another business inventory', () async {
+      await createFixture();
+
+      await createStock(branch: branchId, quantity: 2000);
+
+      final valuation = await service.getInventoryValuation(
+        businessId: 'another-business',
+      );
+
+      expect(valuation, 0);
     });
   });
 }

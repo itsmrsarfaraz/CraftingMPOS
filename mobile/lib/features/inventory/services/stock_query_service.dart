@@ -56,4 +56,77 @@ class StockQueryService {
 
     return query.get();
   }
+
+  Future<int> getInventoryValuation({
+    required String businessId,
+    String? branchId,
+  }) async {
+    // 1. Validate stock independently of the product-variant join.
+    final negativeStockQuery = _database.select(_database.branchStocks)
+      ..where(
+        (stock) =>
+            stock.businessId.equals(businessId) &
+            stock.quantityMilliunits.isSmallerThanValue(0),
+      );
+
+    if (branchId != null) {
+      negativeStockQuery.where((stock) => stock.branchId.equals(branchId));
+    }
+
+    negativeStockQuery.limit(1);
+
+    final negativeStock = await negativeStockQuery.getSingleOrNull();
+
+    if (negativeStock != null) {
+      throw StateError(
+        'Negative stock detected for variant ${negativeStock.variantId}.',
+      );
+    }
+
+    // 2. Join stock records with their product variants.
+    final query = _database.select(_database.branchStocks).join([
+      innerJoin(
+        _database.productVariants,
+        _database.productVariants.id.equalsExp(
+              _database.branchStocks.variantId,
+            ) &
+            _database.productVariants.businessId.equalsExp(
+              _database.branchStocks.businessId,
+            ),
+      ),
+    ]);
+
+    query.where(_database.branchStocks.businessId.equals(businessId));
+
+    if (branchId != null) {
+      query.where(_database.branchStocks.branchId.equals(branchId));
+    }
+
+    // 3. Calculate inventory valuation using integer arithmetic.
+    final rows = await query.get();
+
+    var totalValueInPaisa = BigInt.zero;
+
+    for (final row in rows) {
+      final stock = row.readTable(_database.branchStocks);
+      final variant = row.readTable(_database.productVariants);
+
+      totalValueInPaisa +=
+          BigInt.from(stock.quantityMilliunits) *
+          BigInt.from(variant.costPrice);
+    }
+
+    // 4. Round once after aggregating all stock values.
+    final roundedValue =
+        (totalValueInPaisa + BigInt.from(500)) ~/ BigInt.from(1000);
+
+    // 5. Protect the supported integer range.
+    const maxInt64 = 9223372036854775807;
+
+    if (roundedValue > BigInt.from(maxInt64)) {
+      throw StateError('Inventory valuation exceeds the supported range.');
+    }
+
+    return roundedValue.toInt();
+  }
 }
