@@ -3,9 +3,8 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
-
-// ignore: unused_import
 import '../models/product_details.dart';
+import '../models/product_list_item.dart';
 
 class ProductService {
   ProductService(this._database);
@@ -46,7 +45,9 @@ class ProductService {
     final normalizedDescription = _normalizeOptional(description);
     final normalizedImagePath = _normalizeOptional(imagePath);
 
-    if (businessId.trim().isEmpty) {
+    final normalizedBusinessId = businessId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
       throw ArgumentError.value(
         businessId,
         'businessId',
@@ -97,9 +98,10 @@ class ProductService {
     final now = DateTime.now();
 
     await _database.transaction(() async {
-      final business = await (_database.select(
-        _database.businessSettings,
-      )..where((table) => table.id.equals(businessId))).getSingleOrNull();
+      final business =
+          await (_database.select(_database.businessSettings)
+                ..where((table) => table.id.equals(normalizedBusinessId)))
+              .getSingleOrNull();
 
       if (business == null) {
         throw StateError('Business does not exist.');
@@ -110,7 +112,7 @@ class ProductService {
             await (_database.select(_database.categories)..where(
                   (table) =>
                       table.id.equals(normalizedCategoryId) &
-                      table.businessId.equals(businessId),
+                      table.businessId.equals(normalizedBusinessId),
                 ))
                 .getSingleOrNull();
 
@@ -126,7 +128,7 @@ class ProductService {
           .insert(
             ProductsCompanion.insert(
               id: productId,
-              businessId: businessId,
+              businessId: normalizedBusinessId,
               categoryId: Value(normalizedCategoryId),
               name: normalizedName,
               description: Value(normalizedDescription),
@@ -141,7 +143,7 @@ class ProductService {
           .insert(
             ProductVariantsCompanion.insert(
               id: variantId,
-              businessId: businessId,
+              businessId: normalizedBusinessId,
               productId: productId,
               name: normalizedVariantName,
               sku: Value(normalizedSku),
@@ -168,7 +170,10 @@ class ProductService {
     required String businessId,
     required String productId,
   }) async {
-    if (businessId.trim().isEmpty) {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedProductId = productId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
       throw ArgumentError.value(
         businessId,
         'businessId',
@@ -176,7 +181,7 @@ class ProductService {
       );
     }
 
-    if (productId.trim().isEmpty) {
+    if (normalizedProductId.isEmpty) {
       throw ArgumentError.value(
         productId,
         'productId',
@@ -187,8 +192,8 @@ class ProductService {
     final product =
         await (_database.select(_database.products)..where(
               (table) =>
-                  table.id.equals(productId) &
-                  table.businessId.equals(businessId),
+                  table.id.equals(normalizedProductId) &
+                  table.businessId.equals(normalizedBusinessId),
             ))
             .getSingleOrNull();
 
@@ -203,7 +208,7 @@ class ProductService {
           await (_database.select(_database.categories)..where(
                 (table) =>
                     table.id.equals(product.categoryId!) &
-                    table.businessId.equals(businessId),
+                    table.businessId.equals(normalizedBusinessId),
               ))
               .getSingleOrNull();
     }
@@ -212,8 +217,8 @@ class ProductService {
         await (_database.select(_database.productVariants)
               ..where(
                 (table) =>
-                    table.productId.equals(productId) &
-                    table.businessId.equals(businessId),
+                    table.productId.equals(normalizedProductId) &
+                    table.businessId.equals(normalizedBusinessId),
               )
               ..orderBy([
                 (table) => OrderingTerm.asc(table.name),
@@ -225,6 +230,118 @@ class ProductService {
       product: product,
       category: category,
       variants: List.unmodifiable(variants),
+    );
+  }
+
+  /// Retrieves a paginated list of products for a business.
+  ///
+  /// Searches product names and active variant SKUs.
+  /// Returns each product only once.
+  ///
+  /// Inactive variants do not affect SKU search results.
+  Future<List<ProductListItem>> getProducts({
+    required String businessId,
+    String? search,
+    String? categoryId,
+    bool? isActive = true,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw ArgumentError.value(
+        limit,
+        'limit',
+        'Limit must be between 1 and 100.',
+      );
+    }
+
+    if (offset < 0) {
+      throw ArgumentError.value(offset, 'offset', 'Offset cannot be negative.');
+    }
+
+    final normalizedSearch = _normalizeOptional(search);
+    final normalizedCategoryId = _normalizeOptional(categoryId);
+
+    final query = _database.select(_database.products)
+      ..where((table) => table.businessId.equals(normalizedBusinessId));
+
+    if (isActive != null) {
+      query.where((table) => table.isActive.equals(isActive));
+    }
+
+    if (normalizedCategoryId != null) {
+      query.where((table) => table.categoryId.equals(normalizedCategoryId));
+    }
+
+    if (normalizedSearch != null) {
+      final pattern = '%$normalizedSearch%';
+
+      final matchingVariant = _database.selectOnly(_database.productVariants)
+        ..addColumns([_database.productVariants.id])
+        ..where(
+          _database.productVariants.businessId.equals(normalizedBusinessId) &
+              _database.productVariants.productId.equalsExp(
+                _database.products.id,
+              ) &
+              _database.productVariants.isActive.equals(true) &
+              _database.productVariants.sku.like(pattern),
+        );
+
+      query.where(
+        (table) => table.name.like(pattern) | existsQuery(matchingVariant),
+      );
+    }
+
+    query
+      ..orderBy([
+        (table) => OrderingTerm.asc(table.name),
+        (table) => OrderingTerm.asc(table.id),
+      ])
+      ..limit(limit, offset: offset);
+
+    final products = await query.get();
+
+    if (products.isEmpty) {
+      return const [];
+    }
+
+    final categoryIds = products
+        .map((product) => product.categoryId)
+        .whereType<String>()
+        .toSet();
+
+    final categories = categoryIds.isEmpty
+        ? <Category>[]
+        : await (_database.select(_database.categories)..where(
+                (table) =>
+                    table.businessId.equals(normalizedBusinessId) &
+                    table.id.isIn(categoryIds),
+              ))
+              .get();
+
+    final categoriesById = {
+      for (final category in categories) category.id: category,
+    };
+
+    return List.unmodifiable(
+      products.map(
+        (product) => ProductListItem(
+          product: product,
+          category: product.categoryId == null
+              ? null
+              : categoriesById[product.categoryId],
+        ),
+      ),
     );
   }
 

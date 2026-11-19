@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:crafting_mpos/core/database/app_database.dart';
 import 'package:crafting_mpos/features/products/services/product_service.dart';
 import 'package:crafting_mpos/features/products/models/product_details.dart';
+import 'package:crafting_mpos/features/products/models/product_list_item.dart';
 
 void main() {
   late AppDatabase database;
@@ -39,6 +40,7 @@ void main() {
   Future<void> createCategory({
     required String id,
     required String ownerBusinessId,
+    String name = 'General',
     bool isActive = true,
   }) async {
     final now = DateTime.now();
@@ -47,7 +49,7 @@ void main() {
       CategoriesCompanion.insert(
         id: id,
         businessId: ownerBusinessId,
-        name: 'General',
+        name: name,
         isActive: Value(isActive),
         createdAt: now,
         updatedAt: now,
@@ -469,6 +471,411 @@ void main() {
         () => details!.variants.add(details.variants.first),
         throwsUnsupportedError,
       );
+    });
+
+    test('Lists active products with their categories by default', () async {
+      await createFixture();
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Mineral Water',
+        variantName: '1 Litre',
+        categoryId: categoryId,
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Notebook',
+        variantName: 'Standard',
+        costPrice: 10000,
+        sellingPrice: 15000,
+      );
+
+      final products = await service.getProducts(businessId: businessId);
+
+      expect(products, hasLength(2));
+      expect(products, everyElement(isA<ProductListItem>()));
+
+      expect(products.map((item) => item.product.name).toList(), [
+        'Mineral Water',
+        'Notebook',
+      ]);
+
+      expect(products.first.category?.id, categoryId);
+      expect(products.last.category, isNull);
+      expect(products.every((item) => item.product.isActive), isTrue);
+    });
+
+    test('Searches products by name', () async {
+      await createFixture();
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Mineral Water',
+        variantName: '1 Litre',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Notebook',
+        variantName: 'Standard',
+        costPrice: 10000,
+        sellingPrice: 15000,
+      );
+
+      final products = await service.getProducts(
+        businessId: businessId,
+        search: 'water',
+      );
+
+      expect(products, hasLength(1));
+      expect(products.single.product.name, 'Mineral Water');
+    });
+
+    test('Searches products by variant SKU without duplicates', () async {
+      await createFixture();
+
+      final productId = await service.createProduct(
+        businessId: businessId,
+        name: 'Mineral Water',
+        variantName: '1 Litre',
+        sku: 'WATER-1L',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      await database
+          .into(database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: 'variant-water-500ml',
+              businessId: businessId,
+              productId: productId,
+              name: '500 ML',
+              sku: const Value('WATER-500ML'),
+              costPrice: 3000,
+              sellingPrice: 4000,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      final products = await service.getProducts(
+        businessId: businessId,
+        search: 'WATER',
+      );
+
+      expect(products, hasLength(1));
+      expect(products.single.product.id, productId);
+    });
+
+    test('Filters products by category', () async {
+      await createFixture();
+
+      await createCategory(
+        id: 'category-002',
+        ownerBusinessId: businessId,
+        name: 'Stationery',
+      );
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Mineral Water',
+        variantName: '1 Litre',
+        categoryId: categoryId,
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Notebook',
+        variantName: 'Standard',
+        categoryId: 'category-002',
+        costPrice: 10000,
+        sellingPrice: 15000,
+      );
+
+      final products = await service.getProducts(
+        businessId: businessId,
+        categoryId: categoryId,
+      );
+
+      expect(products, hasLength(1));
+      expect(products.single.product.name, 'Mineral Water');
+      expect(products.single.category?.id, categoryId);
+    });
+
+    test('Filters products by active status', () async {
+      await createFixture();
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Active Product',
+        variantName: 'Standard',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      final inactiveProductId = await service.createProduct(
+        businessId: businessId,
+        name: 'Inactive Product',
+        variantName: 'Standard',
+        costPrice: 8000,
+        sellingPrice: 10000,
+      );
+
+      await (database.update(database.products)
+            ..where((table) => table.id.equals(inactiveProductId)))
+          .write(const ProductsCompanion(isActive: Value(false)));
+
+      final activeProducts = await service.getProducts(businessId: businessId);
+
+      final inactiveProducts = await service.getProducts(
+        businessId: businessId,
+        isActive: false,
+      );
+
+      final allProducts = await service.getProducts(
+        businessId: businessId,
+        isActive: null,
+      );
+
+      expect(activeProducts, hasLength(1));
+      expect(activeProducts.single.product.name, 'Active Product');
+
+      expect(inactiveProducts, hasLength(1));
+      expect(inactiveProducts.single.product.name, 'Inactive Product');
+
+      expect(allProducts, hasLength(2));
+    });
+
+    test('Does not expose products belonging to another business', () async {
+      await createFixture();
+      await createBusiness(otherBusinessId);
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Business One Product',
+        variantName: 'Standard',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      await service.createProduct(
+        businessId: otherBusinessId,
+        name: 'Business Two Product',
+        variantName: 'Standard',
+        costPrice: 8000,
+        sellingPrice: 10000,
+      );
+
+      final products = await service.getProducts(
+        businessId: businessId,
+        isActive: null,
+      );
+
+      final searchResults = await service.getProducts(
+        businessId: businessId,
+        search: 'Business Two Product',
+        isActive: null,
+      );
+
+      expect(products, hasLength(1));
+      expect(products.single.product.name, 'Business One Product');
+
+      expect(searchResults, isEmpty);
+    });
+
+    test('Paginates products with stable alphabetical sorting', () async {
+      await createFixture();
+
+      for (final name in ['Zebra', 'Apple', 'Mango', 'Banana']) {
+        await service.createProduct(
+          businessId: businessId,
+          name: name,
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+      }
+
+      final firstPage = await service.getProducts(
+        businessId: businessId,
+        limit: 2,
+        offset: 0,
+      );
+
+      final secondPage = await service.getProducts(
+        businessId: businessId,
+        limit: 2,
+        offset: 2,
+      );
+
+      expect(firstPage.map((item) => item.product.name).toList(), [
+        'Apple',
+        'Banana',
+      ]);
+
+      expect(secondPage.map((item) => item.product.name).toList(), [
+        'Mango',
+        'Zebra',
+      ]);
+
+      final firstPageIds = firstPage.map((item) => item.product.id).toSet();
+      final secondPageIds = secondPage.map((item) => item.product.id).toSet();
+
+      expect(firstPageIds.intersection(secondPageIds), isEmpty);
+    });
+
+    test('Rejects invalid pagination limits', () async {
+      await createFixture();
+
+      await expectLater(
+        service.getProducts(businessId: businessId, limit: 0),
+        throwsArgumentError,
+      );
+
+      await expectLater(
+        service.getProducts(businessId: businessId, limit: 101),
+        throwsArgumentError,
+      );
+    });
+
+    test('Rejects negative pagination offsets', () async {
+      await createFixture();
+
+      await expectLater(
+        service.getProducts(businessId: businessId, offset: -1),
+        throwsArgumentError,
+      );
+    });
+
+    test('Rejects empty or whitespace-only business IDs', () async {
+      await expectLater(
+        service.getProducts(businessId: ''),
+        throwsArgumentError,
+      );
+
+      await expectLater(
+        service.getProducts(businessId: '   '),
+        throwsArgumentError,
+      );
+    });
+
+    test('Returns an unmodifiable product list', () async {
+      await createFixture();
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Test Product',
+        variantName: 'Standard',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      final products = await service.getProducts(businessId: businessId);
+
+      expect(products, hasLength(1));
+
+      expect(() => products.clear(), throwsUnsupportedError);
+    });
+
+    test('Does not find products through inactive variant SKUs', () async {
+      await createFixture();
+
+      final productId = await service.createProduct(
+        businessId: businessId,
+        name: 'Inactive SKU Product',
+        variantName: 'Standard',
+        sku: 'OLD-SKU-001',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      await (database.update(database.productVariants)
+            ..where((table) => table.productId.equals(productId)))
+          .write(const ProductVariantsCompanion(isActive: Value(false)));
+
+      final skuResults = await service.getProducts(
+        businessId: businessId,
+        search: 'OLD-SKU-001',
+      );
+
+      final nameResults = await service.getProducts(
+        businessId: businessId,
+        search: 'Inactive SKU Product',
+      );
+
+      expect(skuResults, isEmpty);
+      expect(nameResults, hasLength(1));
+    });
+
+    test(
+      'Trims business and product IDs when retrieving product details',
+      () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final details = await service.getProductDetails(
+          businessId: ' $businessId ',
+          productId: ' $productId ',
+        );
+
+        expect(details, isNotNull);
+        expect(details!.product.id, productId);
+      },
+    );
+
+    test('Trims business ID when retrieving product listings', () async {
+      await createFixture();
+
+      await service.createProduct(
+        businessId: businessId,
+        name: 'Test Product',
+        variantName: 'Standard',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      final products = await service.getProducts(businessId: ' $businessId ');
+
+      expect(products, hasLength(1));
+      expect(products.single.product.name, 'Test Product');
+    });
+
+    test('Trims business ID when creating a product', () async {
+      await createFixture();
+
+      final productId = await service.createProduct(
+        businessId: ' $businessId ',
+        name: 'Normalized Product',
+        variantName: 'Standard',
+        costPrice: 5000,
+        sellingPrice: 7000,
+      );
+
+      final product = await (database.select(
+        database.products,
+      )..where((table) => table.id.equals(productId))).getSingle();
+
+      final variant = await (database.select(
+        database.productVariants,
+      )..where((table) => table.productId.equals(productId))).getSingle();
+
+      expect(product.businessId, businessId);
+      expect(variant.businessId, businessId);
     });
   });
 }
