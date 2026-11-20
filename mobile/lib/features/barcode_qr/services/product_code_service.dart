@@ -218,4 +218,30 @@ class ProductCodeService {
       return updatedRows > 0;
     });
   }
+
+  Future<bool> deleteCode({
+    required String businessId,
+    required String codeId,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedCodeId = codeId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError('Business ID cannot be empty.');
+    }
+
+    if (normalizedCodeId.isEmpty) {
+      throw ArgumentError('Code ID cannot be empty.');
+    }
+
+    final deletedRows =
+        await (_database.delete(_database.productCodes)..where(
+              (table) =>
+                  table.businessId.equals(normalizedBusinessId) &
+                  table.id.equals(normalizedCodeId),
+            ))
+            .go();
+
+    return deletedRows > 0;
+  }
 }

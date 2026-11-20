@@ -784,5 +784,125 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test('deletes a code successfully', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final codeId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'DELETE-001',
+      );
+
+      final result = await codeService.deleteCode(
+        businessId: businessId,
+        codeId: codeId,
+      );
+
+      final deletedCode = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'DELETE-001',
+      );
+
+      expect(result, isTrue);
+      expect(deletedCode, isNull);
+    });
+
+    test('returns false when deleting a missing code', () async {
+      await createFixture();
+
+      final result = await codeService.deleteCode(
+        businessId: businessId,
+        codeId: 'missing-code',
+      );
+
+      expect(result, isFalse);
+    });
+
+    test('does not delete a code belonging to another business', () async {
+      await createFixture();
+      final otherProductId = await createOtherBusinessVariant();
+
+      final otherVariant = (await productService.getProductVariants(
+        businessId: otherBusinessId,
+        productId: otherProductId,
+      )).single;
+
+      final foreignCodeId = await codeService.createCode(
+        businessId: otherBusinessId,
+        variantId: otherVariant.id,
+        code: 'FOREIGN-DELETE-001',
+      );
+
+      final result = await codeService.deleteCode(
+        businessId: businessId,
+        codeId: foreignCodeId,
+      );
+
+      final foreignCode = await codeService.getCodeByValue(
+        businessId: otherBusinessId,
+        code: 'FOREIGN-DELETE-001',
+      );
+
+      expect(result, isFalse);
+      expect(foreignCode, isNotNull);
+    });
+
+    test(
+      'does not promote another code when deleting the primary code',
+      () async {
+        final productId = await createFixture();
+        final variant = (await productService.getProductVariants(
+          businessId: businessId,
+          productId: productId,
+        )).single;
+
+        final primaryId = await codeService.createCode(
+          businessId: businessId,
+          variantId: variant.id,
+          code: 'PRIMARY-DELETE-001',
+          isPrimary: true,
+        );
+
+        final secondaryId = await codeService.createCode(
+          businessId: businessId,
+          variantId: variant.id,
+          code: 'SECONDARY-DELETE-001',
+        );
+
+        final result = await codeService.deleteCode(
+          businessId: businessId,
+          codeId: primaryId,
+        );
+
+        final remainingCodes = await codeService.getVariantCodes(
+          businessId: businessId,
+          variantId: variant.id,
+        );
+
+        expect(result, isTrue);
+        expect(remainingCodes, hasLength(1));
+        expect(remainingCodes.single.id, secondaryId);
+        expect(remainingCodes.single.isPrimary, isFalse);
+      },
+    );
+
+    test('rejects an empty business ID when deleting a code', () async {
+      expect(
+        () => codeService.deleteCode(businessId: ' ', codeId: 'some-code'),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects an empty code ID when deleting a code', () async {
+      expect(
+        () => codeService.deleteCode(businessId: businessId, codeId: ' '),
+        throwsArgumentError,
+      );
+    });
   });
 }
