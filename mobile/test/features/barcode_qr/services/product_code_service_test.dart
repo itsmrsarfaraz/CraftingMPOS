@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 
 import 'package:crafting_mpos/core/database/app_database.dart';
 import 'package:crafting_mpos/features/products/services/product_service.dart';
@@ -468,6 +469,185 @@ void main() {
     test('Rejects an empty code during lookup', () async {
       expect(
         () => codeService.getCodeByValue(businessId: businessId, code: ' '),
+        throwsArgumentError,
+      );
+    });
+
+    test('Retrieves all codes for a variant with primary code first', () async {
+      final productId = await createFixture();
+
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'SECONDARY-NEWER',
+      );
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'PRIMARY-001',
+        isPrimary: true,
+      );
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'SECONDARY-OLDER',
+      );
+
+      final now = DateTime.now();
+
+      await (database.update(
+        database.productCodes,
+      )..where((table) => table.code.equals('SECONDARY-NEWER'))).write(
+        ProductCodesCompanion(
+          createdAt: Value(now.add(const Duration(seconds: 2))),
+        ),
+      );
+
+      await (database.update(database.productCodes)
+            ..where((table) => table.code.equals('SECONDARY-OLDER')))
+          .write(ProductCodesCompanion(createdAt: Value(now)));
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: variant.id,
+      );
+
+      expect(codes, hasLength(3));
+      expect(codes.map((code) => code.code).toList(), [
+        'PRIMARY-001',
+        'SECONDARY-OLDER',
+        'SECONDARY-NEWER',
+      ]);
+      expect(codes.first.isPrimary, true);
+    });
+
+    test('Retrieves only codes belonging to the requested variant', () async {
+      final firstProductId = await createFixture();
+
+      final secondProductId = await productService.createProduct(
+        businessId: businessId,
+        name: 'Cooking Oil',
+        variantName: '1 Litre',
+        costPrice: 10000,
+        sellingPrice: 12000,
+      );
+
+      final firstVariant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: firstProductId,
+      )).single;
+
+      final secondVariant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: secondProductId,
+      )).single;
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: firstVariant.id,
+        code: 'WATER-001',
+      );
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: secondVariant.id,
+        code: 'OIL-001',
+      );
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: firstVariant.id,
+      );
+
+      expect(codes, hasLength(1));
+      expect(codes.single.code, 'WATER-001');
+    });
+
+    test('Does not retrieve codes belonging to another business', () async {
+      await createFixture();
+      final otherProductId = await createOtherBusinessVariant();
+
+      final otherVariant = (await productService.getProductVariants(
+        businessId: otherBusinessId,
+        productId: otherProductId,
+      )).single;
+
+      await codeService.createCode(
+        businessId: otherBusinessId,
+        variantId: otherVariant.id,
+        code: 'PRIVATE-001',
+      );
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: otherVariant.id,
+      );
+
+      expect(codes, isEmpty);
+    });
+
+    test('Returns an empty list when a variant has no codes', () async {
+      final productId = await createFixture();
+
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: variant.id,
+      );
+
+      expect(codes, isEmpty);
+    });
+
+    test('Returns an immutable list', () async {
+      final productId = await createFixture();
+
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'IMMUTABLE-001',
+      );
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: variant.id,
+      );
+
+      expect(() => codes.clear(), throwsUnsupportedError);
+    });
+
+    test(
+      'Rejects an empty business ID during variant code retrieval',
+      () async {
+        expect(
+          () => codeService.getVariantCodes(
+            businessId: ' ',
+            variantId: 'variant-001',
+          ),
+          throwsArgumentError,
+        );
+      },
+    );
+
+    test('Rejects an empty variant ID during variant code retrieval', () async {
+      expect(
+        () =>
+            codeService.getVariantCodes(businessId: businessId, variantId: ' '),
         throwsArgumentError,
       );
     });

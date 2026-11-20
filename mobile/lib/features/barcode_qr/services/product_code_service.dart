@@ -126,4 +126,44 @@ class ProductCodeService {
         ))
         .getSingleOrNull();
   }
+
+  Future<List<ProductCode>> getVariantCodes({
+    required String businessId,
+    required String variantId,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedVariantId = variantId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError('Business ID cannot be empty.');
+    }
+
+    if (normalizedVariantId.isEmpty) {
+      throw ArgumentError('Variant ID cannot be empty.');
+    }
+
+    final codes =
+        await (_database.select(_database.productCodes)..where(
+              (table) =>
+                  table.businessId.equals(normalizedBusinessId) &
+                  table.variantId.equals(normalizedVariantId),
+            ))
+            .get();
+
+    codes.sort((a, b) {
+      if (a.isPrimary != b.isPrimary) {
+        return a.isPrimary ? -1 : 1;
+      }
+
+      final dateComparison = a.createdAt.compareTo(b.createdAt);
+
+      if (dateComparison != 0) {
+        return dateComparison;
+      }
+
+      return a.id.compareTo(b.id);
+    });
+
+    return List.unmodifiable(codes);
+  }
 }
