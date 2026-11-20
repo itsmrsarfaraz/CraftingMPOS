@@ -160,6 +160,105 @@ class ProductService {
     return productId;
   }
 
+  /// Updates a product's information within its business.
+  ///
+  /// Nullable fields are explicitly replaced, so passing null clears them.
+  /// Returns false if the product does not exist in the specified business.
+  Future<bool> updateProduct({
+    required String businessId,
+    required String productId,
+    required String name,
+    required String? categoryId,
+    required String? description,
+    required String? imagePath,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedProductId = productId.trim();
+    final normalizedName = name.trim();
+    final normalizedCategoryId = _normalizeOptional(categoryId);
+    final normalizedDescription = _normalizeOptional(description);
+    final normalizedImagePath = _normalizeOptional(imagePath);
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedProductId.isEmpty) {
+      throw ArgumentError.value(
+        productId,
+        'productId',
+        'Product ID cannot be empty.',
+      );
+    }
+
+    if (normalizedName.length < 2 || normalizedName.length > 150) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'Product name must contain between 2 and 150 characters.',
+      );
+    }
+
+    final result = await _database.transaction<bool>(() async {
+      final product =
+          await (_database.select(_database.products)..where(
+                (table) =>
+                    table.id.equals(normalizedProductId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .getSingleOrNull();
+      if (product == null) {
+        return false;
+      }
+
+      if (normalizedCategoryId != null) {
+        final category =
+            await (_database.select(_database.categories)..where(
+                  (table) =>
+                      table.id.equals(normalizedCategoryId) &
+                      table.businessId.equals(normalizedBusinessId),
+                ))
+                .getSingleOrNull();
+
+        if (category == null || !category.isActive) {
+          throw StateError(
+            'Category does not exist, is inactive, or belongs to another business.',
+          );
+        }
+      }
+
+      final currentTime = DateTime.now();
+      final minimumNextTime = product.updatedAt.add(const Duration(seconds: 1));
+
+      final now = currentTime.isAfter(minimumNextTime)
+          ? currentTime
+          : minimumNextTime;
+
+      final updatedRows =
+          await (_database.update(_database.products)..where(
+                (table) =>
+                    table.id.equals(normalizedProductId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .write(
+                ProductsCompanion(
+                  name: Value(normalizedName),
+                  categoryId: Value(normalizedCategoryId),
+                  description: Value(normalizedDescription),
+                  imagePath: Value(normalizedImagePath),
+                  updatedAt: Value(now),
+                ),
+              );
+
+      return updatedRows > 0;
+    });
+    return result;
+  }
+
   /// Retrieves a product with its category and all variants.
   ///
   /// Returns null if the product does not exist or belongs

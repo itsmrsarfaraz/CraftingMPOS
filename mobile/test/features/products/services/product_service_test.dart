@@ -305,6 +305,282 @@ void main() {
       expect(remainingProduct.name, 'Existing Product');
     });
 
+    group('updateProduct', () {
+      test('Updates product information successfully', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Old Product',
+          variantName: 'Standard',
+          categoryId: categoryId,
+          description: 'Old description',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final original = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        final result = await service.updateProduct(
+          businessId: businessId,
+          productId: productId,
+          name: '  Updated Product  ',
+          categoryId: categoryId,
+          description: '  Updated description  ',
+          imagePath: '  images/product.png  ',
+        );
+
+        final updated = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(result, isTrue);
+        expect(updated.name, 'Updated Product');
+        expect(updated.categoryId, categoryId);
+        expect(updated.description, 'Updated description');
+        expect(updated.imagePath, 'images/product.png');
+        expect(updated.updatedAt.isAfter(original.updatedAt), isTrue);
+      });
+
+      test(
+        'Clears optional product fields when null or blank is passed',
+        () async {
+          await createFixture();
+
+          final productId = await service.createProduct(
+            businessId: businessId,
+            name: 'Product',
+            variantName: 'Standard',
+            categoryId: categoryId,
+            description: 'Description',
+            costPrice: 5000,
+            sellingPrice: 7000,
+          );
+
+          final result = await service.updateProduct(
+            businessId: businessId,
+            productId: productId,
+            name: 'Updated Product',
+            categoryId: null,
+            description: '  ',
+            imagePath: null,
+          );
+
+          final updated = await (database.select(
+            database.products,
+          )..where((table) => table.id.equals(productId))).getSingle();
+
+          expect(result, isTrue);
+          expect(updated.categoryId, isNull);
+          expect(updated.description, isNull);
+          expect(updated.imagePath, isNull);
+        },
+      );
+
+      test('Returns false for an unknown product', () async {
+        await createBusiness(businessId);
+
+        final result = await service.updateProduct(
+          businessId: businessId,
+          productId: 'unknown-product',
+          name: 'Updated Product',
+          categoryId: null,
+          description: null,
+          imagePath: null,
+        );
+
+        expect(result, isFalse);
+        expect(await productCount(), 0);
+      });
+
+      test('Does not update another business product', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Original Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final result = await service.updateProduct(
+          businessId: otherBusinessId,
+          productId: productId,
+          name: 'Unauthorized Update',
+          categoryId: null,
+          description: null,
+          imagePath: null,
+        );
+
+        final product = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(result, isFalse);
+        expect(product.name, 'Original Product');
+      });
+
+      test('Rejects a category belonging to another business', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        await createCategory(
+          id: 'other-category',
+          ownerBusinessId: otherBusinessId,
+        );
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Original Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        await expectLater(
+          service.updateProduct(
+            businessId: businessId,
+            productId: productId,
+            name: 'Updated Product',
+            categoryId: 'other-category',
+            description: null,
+            imagePath: null,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        final product = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(product.name, 'Original Product');
+        expect(product.categoryId, isNull);
+      });
+
+      test('Rejects an inactive category', () async {
+        await createFixture();
+
+        await database.updateCategory(
+          businessId,
+          categoryId,
+          CategoriesCompanion(isActive: const Value(false)),
+        );
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Original Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        await expectLater(
+          service.updateProduct(
+            businessId: businessId,
+            productId: productId,
+            name: 'Updated Product',
+            categoryId: categoryId,
+            description: null,
+            imagePath: null,
+          ),
+          throwsA(isA<StateError>()),
+        );
+      });
+
+      test(
+        'Rejects invalid business ID, product ID, and product name',
+        () async {
+          await createFixture();
+
+          final productId = await service.createProduct(
+            businessId: businessId,
+            name: 'Original Product',
+            variantName: 'Standard',
+            costPrice: 5000,
+            sellingPrice: 7000,
+          );
+
+          final invalidCalls = [
+            () => service.updateProduct(
+              businessId: ' ',
+              productId: productId,
+              name: 'Updated Product',
+              categoryId: null,
+              description: null,
+              imagePath: null,
+            ),
+            () => service.updateProduct(
+              businessId: businessId,
+              productId: ' ',
+              name: 'Updated Product',
+              categoryId: null,
+              description: null,
+              imagePath: null,
+            ),
+            () => service.updateProduct(
+              businessId: businessId,
+              productId: productId,
+              name: ' A ',
+              categoryId: null,
+              description: null,
+              imagePath: null,
+            ),
+            () => service.updateProduct(
+              businessId: businessId,
+              productId: productId,
+              name: ' ',
+              categoryId: null,
+              description: null,
+              imagePath: null,
+            ),
+          ];
+
+          for (final update in invalidCalls) {
+            await expectLater(update(), throwsArgumentError);
+          }
+
+          final product = await (database.select(
+            database.products,
+          )..where((table) => table.id.equals(productId))).getSingle();
+
+          expect(product.name, 'Original Product');
+        },
+      );
+
+      test('Trims business ID and product ID', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Original Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final result = await service.updateProduct(
+          businessId: ' $businessId ',
+          productId: ' $productId ',
+          name: 'Updated Product',
+          categoryId: null,
+          description: null,
+          imagePath: null,
+        );
+
+        expect(result, isTrue);
+
+        final product = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(product.name, 'Updated Product');
+      });
+    });
+
     test('Retrieves product with category and multiple variants', () async {
       await createFixture();
 
