@@ -600,6 +600,298 @@ void main() {
       });
     });
 
+    group('updateVariant', () {
+      test('Updates variant information successfully', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Mineral Water',
+          variantName: '500 ml',
+          sku: 'WATER-500',
+          costPrice: 3000,
+          sellingPrice: 4000,
+        );
+
+        final original = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.updateVariant(
+          businessId: businessId,
+          variantId: original.id,
+          name: '1 Litre',
+          sku: 'WATER-1000',
+          attributes: '{"size":"1 litre"}',
+          costPrice: 5000,
+          sellingPrice: 7000,
+          unit: 'bottle',
+          trackStock: false,
+        );
+
+        final updated = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(original.id))).getSingle();
+
+        expect(result, isTrue);
+        expect(updated.id, original.id);
+        expect(updated.businessId, businessId);
+        expect(updated.productId, productId);
+        expect(updated.name, '1 Litre');
+        expect(updated.sku, 'WATER-1000');
+        expect(updated.attributes, '{"size":"1 litre"}');
+        expect(updated.costPrice, 5000);
+        expect(updated.sellingPrice, 7000);
+        expect(updated.unit, 'bottle');
+        expect(updated.trackStock, isFalse);
+        expect(updated.createdAt, original.createdAt);
+        expect(updated.updatedAt.isAfter(original.updatedAt), isTrue);
+      });
+
+      test('Normalizes text and clears empty optional fields', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          sku: 'NOTEBOOK-001',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final original = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.updateVariant(
+          businessId: ' $businessId ',
+          variantId: ' ${original.id} ',
+          name: '  Premium  ',
+          sku: '   ',
+          attributes: '   ',
+          unit: '  pack  ',
+          costPrice: 2000,
+          sellingPrice: 3000,
+        );
+
+        final updated = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(original.id))).getSingle();
+
+        expect(result, isTrue);
+        expect(updated.name, 'Premium');
+        expect(updated.sku, isNull);
+        expect(updated.attributes, isNull);
+        expect(updated.unit, 'pack');
+      });
+
+      test('Returns false for an unknown variant', () async {
+        await createBusiness(businessId);
+
+        final result = await service.updateVariant(
+          businessId: businessId,
+          variantId: 'unknown-variant',
+          name: 'Premium',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        expect(result, isFalse);
+        expect(await variantCount(), 0);
+      });
+
+      test('Does not update a variant belonging to another business', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final original = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.updateVariant(
+          businessId: otherBusinessId,
+          variantId: original.id,
+          name: 'Modified',
+          costPrice: 2000,
+          sellingPrice: 3000,
+        );
+
+        final unchanged = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(original.id))).getSingle();
+
+        expect(result, isFalse);
+        expect(unchanged.name, 'Standard');
+        expect(unchanged.costPrice, 1000);
+        expect(unchanged.sellingPrice, 1500);
+      });
+
+      test('Rejects a duplicate SKU belonging to another variant', () async {
+        await createFixture();
+
+        final firstProductId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          sku: 'SHARED-SKU',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final secondProductId = await service.createProduct(
+          businessId: businessId,
+          name: 'Pen',
+          variantName: 'Standard',
+          costPrice: 500,
+          sellingPrice: 800,
+        );
+
+        final secondVariant =
+            await (database.select(database.productVariants)
+                  ..where((table) => table.productId.equals(secondProductId)))
+                .getSingle();
+
+        await expectLater(
+          service.updateVariant(
+            businessId: businessId,
+            variantId: secondVariant.id,
+            name: 'Premium',
+            sku: ' SHARED-SKU ',
+            costPrice: 2000,
+            sellingPrice: 3000,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        final unchanged = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(secondVariant.id))).getSingle();
+
+        expect(unchanged.name, 'Standard');
+        expect(unchanged.sku, isNull);
+        expect(await variantCount(), 2);
+        expect(firstProductId, isNotEmpty);
+      });
+
+      test('Allows a variant to retain its own SKU', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          sku: 'NOTEBOOK-001',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final original = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.updateVariant(
+          businessId: businessId,
+          variantId: original.id,
+          name: 'Standard Updated',
+          sku: 'NOTEBOOK-001',
+          costPrice: 1200,
+          sellingPrice: 1800,
+        );
+
+        expect(result, isTrue);
+
+        final updated = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(original.id))).getSingle();
+
+        expect(updated.sku, 'NOTEBOOK-001');
+        expect(updated.name, 'Standard Updated');
+      });
+
+      test('Rejects invalid input before updating', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final original = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final invalidCalls = [
+          () => service.updateVariant(
+            businessId: ' ',
+            variantId: original.id,
+            name: 'Premium',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.updateVariant(
+            businessId: businessId,
+            variantId: ' ',
+            name: 'Premium',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.updateVariant(
+            businessId: businessId,
+            variantId: original.id,
+            name: ' ',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.updateVariant(
+            businessId: businessId,
+            variantId: original.id,
+            name: 'Premium',
+            unit: ' ',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.updateVariant(
+            businessId: businessId,
+            variantId: original.id,
+            name: 'Premium',
+            costPrice: -1,
+            sellingPrice: 200,
+          ),
+          () => service.updateVariant(
+            businessId: businessId,
+            variantId: original.id,
+            name: 'Premium',
+            costPrice: 100,
+            sellingPrice: -1,
+          ),
+        ];
+
+        for (final update in invalidCalls) {
+          await expectLater(update(), throwsArgumentError);
+        }
+
+        final unchanged = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(original.id))).getSingle();
+
+        expect(unchanged.name, 'Standard');
+        expect(unchanged.costPrice, 1000);
+        expect(unchanged.sellingPrice, 1500);
+      });
+    });
+
     group('updateProduct', () {
       test('Updates product information successfully', () async {
         await createFixture();

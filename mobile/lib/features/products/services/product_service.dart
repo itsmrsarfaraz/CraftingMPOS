@@ -280,6 +280,132 @@ class ProductService {
     return variantId;
   }
 
+  /// Updates an existing variant without changing its product association.
+  ///
+  /// Returns false if the variant does not belong to the business.
+  /// Blank or null SKU and attributes values clear those fields.
+  Future<bool> updateVariant({
+    required String businessId,
+    required String variantId,
+    required String name,
+    required int costPrice,
+    required int sellingPrice,
+    String? sku,
+    String? attributes,
+    String unit = 'piece',
+    bool trackStock = true,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedVariantId = variantId.trim();
+    final normalizedName = name.trim();
+    final normalizedSku = _normalizeOptional(sku);
+    final normalizedAttributes = _normalizeOptional(attributes);
+    final normalizedUnit = unit.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedVariantId.isEmpty) {
+      throw ArgumentError.value(
+        variantId,
+        'variantId',
+        'Variant ID cannot be empty.',
+      );
+    }
+
+    if (normalizedName.isEmpty || normalizedName.length > 150) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'Variant name must contain between 1 and 150 characters.',
+      );
+    }
+
+    if (normalizedUnit.isEmpty) {
+      throw ArgumentError.value(unit, 'unit', 'Unit cannot be empty.');
+    }
+
+    if (costPrice < 0) {
+      throw ArgumentError.value(
+        costPrice,
+        'costPrice',
+        'Cost price cannot be negative.',
+      );
+    }
+
+    if (sellingPrice < 0) {
+      throw ArgumentError.value(
+        sellingPrice,
+        'sellingPrice',
+        'Selling price cannot be negative.',
+      );
+    }
+
+    final result = await _database.transaction<bool>(() async {
+      final variant =
+          await (_database.select(_database.productVariants)..where(
+                (table) =>
+                    table.id.equals(normalizedVariantId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .getSingleOrNull();
+
+      if (variant == null) {
+        return false;
+      }
+
+      if (normalizedSku != null) {
+        final existingVariant =
+            await (_database.select(_database.productVariants)..where(
+                  (table) =>
+                      table.businessId.equals(normalizedBusinessId) &
+                      table.sku.equals(normalizedSku),
+                ))
+                .getSingleOrNull();
+
+        if (existingVariant != null &&
+            existingVariant.id != normalizedVariantId) {
+          throw StateError('SKU already exists in this business.');
+        }
+      }
+
+      final currentTime = DateTime.now();
+      final minimumNextTime = variant.updatedAt.add(const Duration(seconds: 1));
+
+      final now = currentTime.isAfter(minimumNextTime)
+          ? currentTime
+          : minimumNextTime;
+
+      final updatedRows =
+          await (_database.update(_database.productVariants)..where(
+                (table) =>
+                    table.id.equals(normalizedVariantId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .write(
+                ProductVariantsCompanion(
+                  name: Value(normalizedName),
+                  sku: Value(normalizedSku),
+                  attributes: Value(normalizedAttributes),
+                  costPrice: Value(costPrice),
+                  sellingPrice: Value(sellingPrice),
+                  unit: Value(normalizedUnit),
+                  trackStock: Value(trackStock),
+                  updatedAt: Value(now),
+                ),
+              );
+
+      return updatedRows > 0;
+    });
+
+    return result;
+  }
+
   /// Updates a product's information within its business.
   ///
   /// Nullable fields are explicitly replaced, so passing null clears them.
