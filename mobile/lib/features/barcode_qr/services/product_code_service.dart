@@ -103,4 +103,27 @@ class ProductCodeService {
       return id;
     });
   }
+
+  Future<ProductCode?> getCodeByValue({
+    required String businessId,
+    required String code,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedCode = code.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError('Business ID cannot be empty.');
+    }
+
+    if (normalizedCode.isEmpty) {
+      throw ArgumentError('Code cannot be empty.');
+    }
+
+    return (_database.select(_database.productCodes)..where(
+          (table) =>
+              table.businessId.equals(normalizedBusinessId) &
+              table.code.equals(normalizedCode),
+        ))
+        .getSingleOrNull();
+  }
 }

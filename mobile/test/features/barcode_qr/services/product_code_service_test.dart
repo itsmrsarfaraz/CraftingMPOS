@@ -374,5 +374,102 @@ void main() {
         expect(codes.single.code, 'PRIMARY-001');
       },
     );
+
+    test('Retrieves a code by its exact value', () async {
+      final productId = await createFixture();
+
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final codeId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'SCAN-001',
+      );
+
+      final result = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'SCAN-001',
+      );
+
+      expect(result, isNotNull);
+      expect(result!.id, codeId);
+      expect(result.code, 'SCAN-001');
+      expect(result.businessId, businessId);
+      expect(result.variantId, variant.id);
+    });
+
+    test('Returns null when the code does not exist', () async {
+      await createFixture();
+
+      final result = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'MISSING-001',
+      );
+
+      expect(result, isNull);
+    });
+
+    test('Does not retrieve a code belonging to another business', () async {
+      await createFixture();
+      final otherProductId = await createOtherBusinessVariant();
+
+      final otherVariant = (await productService.getProductVariants(
+        businessId: otherBusinessId,
+        productId: otherProductId,
+      )).single;
+
+      await codeService.createCode(
+        businessId: otherBusinessId,
+        variantId: otherVariant.id,
+        code: 'PRIVATE-CODE-001',
+      );
+
+      final result = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'PRIVATE-CODE-001',
+      );
+
+      expect(result, isNull);
+    });
+
+    test('Trims business ID and code before lookup', () async {
+      final productId = await createFixture();
+
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'TRIM-001',
+      );
+
+      final result = await codeService.getCodeByValue(
+        businessId: ' $businessId ',
+        code: ' TRIM-001 ',
+      );
+
+      expect(result, isNotNull);
+      expect(result!.code, 'TRIM-001');
+    });
+
+    test('Rejects an empty business ID during lookup', () async {
+      expect(
+        () => codeService.getCodeByValue(businessId: ' ', code: 'SCAN-001'),
+        throwsArgumentError,
+      );
+    });
+
+    test('Rejects an empty code during lookup', () async {
+      expect(
+        () => codeService.getCodeByValue(businessId: businessId, code: ' '),
+        throwsArgumentError,
+      );
+    });
   });
 }
