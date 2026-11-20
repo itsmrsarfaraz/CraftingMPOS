@@ -651,5 +651,138 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test('sets a new primary code and demotes the previous primary', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final firstId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'PRIMARY-001',
+        isPrimary: true,
+      );
+
+      final secondId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'SECONDARY-001',
+      );
+
+      final result = await codeService.setPrimaryCode(
+        businessId: businessId,
+        codeId: secondId,
+      );
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: variant.id,
+      );
+
+      expect(result, isTrue);
+      expect(
+        codes.singleWhere((code) => code.id == firstId).isPrimary,
+        isFalse,
+      );
+      expect(
+        codes.singleWhere((code) => code.id == secondId).isPrimary,
+        isTrue,
+      );
+    });
+
+    test('returns false when the code does not exist', () async {
+      final result = await codeService.setPrimaryCode(
+        businessId: businessId,
+        codeId: 'missing-code',
+      );
+
+      expect(result, isFalse);
+    });
+
+    test('does not promote a code belonging to another business', () async {
+      await createFixture();
+      final otherProductId = await createOtherBusinessVariant();
+      final otherVariant = (await productService.getProductVariants(
+        businessId: otherBusinessId,
+        productId: otherProductId,
+      )).single;
+
+      final foreignCodeId = await codeService.createCode(
+        businessId: otherBusinessId,
+        variantId: otherVariant.id,
+        code: 'FOREIGN-001',
+      );
+
+      final result = await codeService.setPrimaryCode(
+        businessId: businessId,
+        codeId: foreignCodeId,
+      );
+
+      final foreignCode = await codeService.getCodeByValue(
+        businessId: otherBusinessId,
+        code: 'FOREIGN-001',
+      );
+
+      expect(result, isFalse);
+      expect(foreignCode!.isPrimary, isFalse);
+    });
+
+    test('keeps the current primary code unchanged', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final primaryId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'CURRENT-PRIMARY',
+        isPrimary: true,
+      );
+
+      final secondaryId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'CURRENT-SECONDARY',
+      );
+
+      final result = await codeService.setPrimaryCode(
+        businessId: businessId,
+        codeId: primaryId,
+      );
+
+      final codes = await codeService.getVariantCodes(
+        businessId: businessId,
+        variantId: variant.id,
+      );
+
+      expect(result, isTrue);
+      expect(
+        codes.singleWhere((code) => code.id == primaryId).isPrimary,
+        isTrue,
+      );
+      expect(
+        codes.singleWhere((code) => code.id == secondaryId).isPrimary,
+        isFalse,
+      );
+    });
+
+    test('rejects an empty business ID', () async {
+      expect(
+        () => codeService.setPrimaryCode(businessId: ' ', codeId: 'some-code'),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects an empty code ID', () async {
+      expect(
+        () => codeService.setPrimaryCode(businessId: businessId, codeId: ' '),
+        throwsArgumentError,
+      );
+    });
   });
 }

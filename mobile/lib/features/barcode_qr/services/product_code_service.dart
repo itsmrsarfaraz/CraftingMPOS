@@ -166,4 +166,56 @@ class ProductCodeService {
 
     return List.unmodifiable(codes);
   }
+
+  Future<bool> setPrimaryCode({
+    required String businessId,
+    required String codeId,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedCodeId = codeId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError('Business ID cannot be empty.');
+    }
+
+    if (normalizedCodeId.isEmpty) {
+      throw ArgumentError('Code ID cannot be empty.');
+    }
+
+    return _database.transaction<bool>(() async {
+      final selectedCode =
+          await (_database.select(_database.productCodes)..where(
+                (table) =>
+                    table.businessId.equals(normalizedBusinessId) &
+                    table.id.equals(normalizedCodeId),
+              ))
+              .getSingleOrNull();
+
+      if (selectedCode == null) {
+        return false;
+      }
+
+      if (selectedCode.isPrimary) {
+        return true;
+      }
+
+      await (_database.update(_database.productCodes)..where(
+            (table) =>
+                table.businessId.equals(normalizedBusinessId) &
+                table.variantId.equals(selectedCode.variantId) &
+                table.isPrimary.equals(true),
+          ))
+          .write(const ProductCodesCompanion(isPrimary: Value(false)));
+
+      final updatedRows =
+          await (_database.update(_database.productCodes)..where(
+                (table) =>
+                    table.businessId.equals(normalizedBusinessId) &
+                    table.id.equals(normalizedCodeId),
+              ))
+              .write(const ProductCodesCompanion(isPrimary: Value(true)));
+
+      return updatedRows > 0;
+    });
+  }
 }
