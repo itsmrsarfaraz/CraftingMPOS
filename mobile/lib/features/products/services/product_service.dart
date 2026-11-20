@@ -160,6 +160,126 @@ class ProductService {
     return productId;
   }
 
+  /// Creates an additional variant for an existing active product.
+  ///
+  /// Returns the newly created variant ID.
+  Future<String> createVariant({
+    required String businessId,
+    required String productId,
+    required String name,
+    required int costPrice,
+    required int sellingPrice,
+    String? sku,
+    String? attributes,
+    String unit = 'piece',
+    bool trackStock = true,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedProductId = productId.trim();
+    final normalizedName = name.trim();
+    final normalizedSku = _normalizeOptional(sku);
+    final normalizedAttributes = _normalizeOptional(attributes);
+    final normalizedUnit = unit.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedProductId.isEmpty) {
+      throw ArgumentError.value(
+        productId,
+        'productId',
+        'Product ID cannot be empty.',
+      );
+    }
+
+    if (normalizedName.isEmpty || normalizedName.length > 150) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'Variant name must contain between 1 and 150 characters.',
+      );
+    }
+
+    if (normalizedUnit.isEmpty) {
+      throw ArgumentError.value(unit, 'unit', 'Unit cannot be empty.');
+    }
+
+    if (costPrice < 0) {
+      throw ArgumentError.value(
+        costPrice,
+        'costPrice',
+        'Cost price cannot be negative.',
+      );
+    }
+
+    if (sellingPrice < 0) {
+      throw ArgumentError.value(
+        sellingPrice,
+        'sellingPrice',
+        'Selling price cannot be negative.',
+      );
+    }
+
+    final variantId = _newId('variant');
+    final now = DateTime.now();
+
+    await _database.transaction(() async {
+      final product =
+          await (_database.select(_database.products)..where(
+                (table) =>
+                    table.id.equals(normalizedProductId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .getSingleOrNull();
+
+      if (product == null || !product.isActive) {
+        throw StateError(
+          'Product does not exist, is inactive, or belongs to another business.',
+        );
+      }
+
+      if (normalizedSku != null) {
+        final existingVariant =
+            await (_database.select(_database.productVariants)..where(
+                  (table) =>
+                      table.businessId.equals(normalizedBusinessId) &
+                      table.sku.equals(normalizedSku),
+                ))
+                .getSingleOrNull();
+
+        if (existingVariant != null) {
+          throw StateError('SKU already exists in this business.');
+        }
+      }
+
+      await _database
+          .into(_database.productVariants)
+          .insert(
+            ProductVariantsCompanion.insert(
+              id: variantId,
+              businessId: normalizedBusinessId,
+              productId: normalizedProductId,
+              name: normalizedName,
+              sku: Value(normalizedSku),
+              attributes: Value(normalizedAttributes),
+              costPrice: costPrice,
+              sellingPrice: sellingPrice,
+              unit: Value(normalizedUnit),
+              trackStock: Value(trackStock),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    });
+
+    return variantId;
+  }
+
   /// Updates a product's information within its business.
   ///
   /// Nullable fields are explicitly replaced, so passing null clears them.

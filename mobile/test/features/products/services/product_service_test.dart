@@ -305,6 +305,301 @@ void main() {
       expect(remainingProduct.name, 'Existing Product');
     });
 
+    group('createVariant', () {
+      test('Creates an additional variant for an active product', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Mineral Water',
+          variantName: '500 ml',
+          costPrice: 3000,
+          sellingPrice: 4000,
+        );
+
+        final variantId = await service.createVariant(
+          businessId: businessId,
+          productId: productId,
+          name: '1 Litre',
+          sku: 'WATER-001',
+          attributes: '{"size":"1 litre"}',
+          costPrice: 5000,
+          sellingPrice: 7000,
+          unit: 'bottle',
+          trackStock: false,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variantId))).getSingle();
+
+        expect(variantId, startsWith('variant-'));
+        expect(variant.businessId, businessId);
+        expect(variant.productId, productId);
+        expect(variant.name, '1 Litre');
+        expect(variant.sku, 'WATER-001');
+        expect(variant.attributes, '{"size":"1 litre"}');
+        expect(variant.costPrice, 5000);
+        expect(variant.sellingPrice, 7000);
+        expect(variant.unit, 'bottle');
+        expect(variant.trackStock, isFalse);
+        expect(variant.isActive, isTrue);
+        expect(variant.createdAt, isNotNull);
+        expect(variant.updatedAt, isNotNull);
+
+        expect(await productCount(), 1);
+        expect(await variantCount(), 2);
+      });
+
+      test('Normalizes variant text and empty optional fields', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final variantId = await service.createVariant(
+          businessId: ' $businessId ',
+          productId: ' $productId ',
+          name: '  Premium  ',
+          sku: '   ',
+          attributes: '   ',
+          unit: '  pack  ',
+          costPrice: 2000,
+          sellingPrice: 3000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variantId))).getSingle();
+
+        expect(variant.name, 'Premium');
+        expect(variant.sku, isNull);
+        expect(variant.attributes, isNull);
+        expect(variant.unit, 'pack');
+      });
+
+      test('Rejects a product belonging to another business', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        await expectLater(
+          service.createVariant(
+            businessId: otherBusinessId,
+            productId: productId,
+            name: 'Premium',
+            costPrice: 2000,
+            sellingPrice: 3000,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(await variantCount(), 1);
+      });
+
+      test('Rejects an unknown product', () async {
+        await createBusiness(businessId);
+
+        await expectLater(
+          service.createVariant(
+            businessId: businessId,
+            productId: 'unknown-product',
+            name: 'Premium',
+            costPrice: 2000,
+            sellingPrice: 3000,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(await variantCount(), 0);
+      });
+
+      test('Rejects adding a variant to an inactive product', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        await (database.update(database.products)..where(
+              (table) =>
+                  table.businessId.equals(businessId) &
+                  table.id.equals(productId),
+            ))
+            .write(ProductsCompanion(isActive: const Value(false)));
+
+        await expectLater(
+          service.createVariant(
+            businessId: businessId,
+            productId: productId,
+            name: 'Premium',
+            costPrice: 2000,
+            sellingPrice: 3000,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(await variantCount(), 1);
+      });
+
+      test('Rejects duplicate SKU within the same business', () async {
+        await createFixture();
+
+        final firstProductId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          sku: 'SHARED-SKU',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final secondProductId = await service.createProduct(
+          businessId: businessId,
+          name: 'Pen',
+          variantName: 'Standard',
+          costPrice: 500,
+          sellingPrice: 800,
+        );
+
+        await expectLater(
+          service.createVariant(
+            businessId: businessId,
+            productId: secondProductId,
+            name: 'Premium',
+            sku: ' SHARED-SKU ',
+            costPrice: 2000,
+            sellingPrice: 3000,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(await productCount(), 2);
+        expect(await variantCount(), 2);
+        expect(firstProductId, isNotEmpty);
+      });
+
+      test('Allows the same SKU in different businesses', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        final firstProductId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          sku: 'SHARED-SKU',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final secondProductId = await service.createProduct(
+          businessId: otherBusinessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final variantId = await service.createVariant(
+          businessId: otherBusinessId,
+          productId: secondProductId,
+          name: 'Premium',
+          sku: 'SHARED-SKU',
+          costPrice: 2000,
+          sellingPrice: 3000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variantId))).getSingle();
+
+        expect(variant.businessId, otherBusinessId);
+        expect(variant.productId, secondProductId);
+        expect(await variantCount(), 3);
+        expect(firstProductId, isNotEmpty);
+      });
+
+      test('Rejects invalid input before inserting a variant', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 1000,
+          sellingPrice: 1500,
+        );
+
+        final invalidCalls = [
+          () => service.createVariant(
+            businessId: ' ',
+            productId: productId,
+            name: 'Premium',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.createVariant(
+            businessId: businessId,
+            productId: ' ',
+            name: 'Premium',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.createVariant(
+            businessId: businessId,
+            productId: productId,
+            name: ' ',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.createVariant(
+            businessId: businessId,
+            productId: productId,
+            name: 'Premium',
+            unit: ' ',
+            costPrice: 100,
+            sellingPrice: 200,
+          ),
+          () => service.createVariant(
+            businessId: businessId,
+            productId: productId,
+            name: 'Premium',
+            costPrice: -1,
+            sellingPrice: 200,
+          ),
+          () => service.createVariant(
+            businessId: businessId,
+            productId: productId,
+            name: 'Premium',
+            costPrice: 100,
+            sellingPrice: -1,
+          ),
+        ];
+
+        for (final create in invalidCalls) {
+          await expectLater(create(), throwsArgumentError);
+        }
+
+        expect(await variantCount(), 1);
+      });
+    });
+
     group('updateProduct', () {
       test('Updates product information successfully', () async {
         await createFixture();
