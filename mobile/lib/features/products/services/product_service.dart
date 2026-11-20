@@ -259,6 +259,78 @@ class ProductService {
     return result;
   }
 
+  /// Activates or deactivates a product within its business.
+  ///
+  /// Returns false if the product does not exist in the specified business.
+  /// If the product already has the requested status, no update is performed.
+  Future<bool> setProductStatus({
+    required String businessId,
+    required String productId,
+    required bool isActive,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedProductId = productId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedProductId.isEmpty) {
+      throw ArgumentError.value(
+        productId,
+        'productId',
+        'Product ID cannot be empty.',
+      );
+    }
+
+    final result = await _database.transaction<bool>(() async {
+      final product =
+          await (_database.select(_database.products)..where(
+                (table) =>
+                    table.id.equals(normalizedProductId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .getSingleOrNull();
+
+      if (product == null) {
+        return false;
+      }
+
+      // Avoid unnecessary database updates when the status is unchanged.
+      if (product.isActive == isActive) {
+        return true;
+      }
+
+      final currentTime = DateTime.now();
+      final minimumNextTime = product.updatedAt.add(const Duration(seconds: 1));
+
+      final now = currentTime.isAfter(minimumNextTime)
+          ? currentTime
+          : minimumNextTime;
+
+      final updatedRows =
+          await (_database.update(_database.products)..where(
+                (table) =>
+                    table.id.equals(normalizedProductId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .write(
+                ProductsCompanion(
+                  isActive: Value(isActive),
+                  updatedAt: Value(now),
+                ),
+              );
+
+      return updatedRows > 0;
+    });
+
+    return result;
+  }
+
   /// Retrieves a product with its category and all variants.
   ///
   /// Returns null if the product does not exist or belongs

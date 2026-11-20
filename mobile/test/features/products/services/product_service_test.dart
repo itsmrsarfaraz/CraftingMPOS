@@ -581,6 +581,186 @@ void main() {
       });
     });
 
+    group('setProductStatus', () {
+      test('Activates an inactive product', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        await service.setProductStatus(
+          businessId: businessId,
+          productId: productId,
+          isActive: false,
+        );
+
+        final result = await service.setProductStatus(
+          businessId: businessId,
+          productId: productId,
+          isActive: true,
+        );
+
+        final product = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(result, isTrue);
+        expect(product.isActive, isTrue);
+      });
+
+      test('Deactivates an active product', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final result = await service.setProductStatus(
+          businessId: businessId,
+          productId: productId,
+          isActive: false,
+        );
+
+        final product = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(result, isTrue);
+        expect(product.isActive, isFalse);
+      });
+
+      test('Does not update timestamp when status is unchanged', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final original = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        final result = await service.setProductStatus(
+          businessId: businessId,
+          productId: productId,
+          isActive: true,
+        );
+
+        final unchanged = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(result, isTrue);
+        expect(unchanged.updatedAt, original.updatedAt);
+      });
+
+      test('Returns false for an unknown product', () async {
+        await createBusiness(businessId);
+
+        final result = await service.setProductStatus(
+          businessId: businessId,
+          productId: 'unknown-product',
+          isActive: false,
+        );
+
+        expect(result, isFalse);
+      });
+
+      test('Does not modify another business product', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Original Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final result = await service.setProductStatus(
+          businessId: otherBusinessId,
+          productId: productId,
+          isActive: false,
+        );
+
+        final product = await (database.select(
+          database.products,
+        )..where((table) => table.id.equals(productId))).getSingle();
+
+        expect(result, isFalse);
+        expect(product.isActive, isTrue);
+      });
+
+      test('Rejects empty business ID and product ID', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        await expectLater(
+          service.setProductStatus(
+            businessId: ' ',
+            productId: productId,
+            isActive: false,
+          ),
+          throwsArgumentError,
+        );
+
+        await expectLater(
+          service.setProductStatus(
+            businessId: businessId,
+            productId: ' ',
+            isActive: false,
+          ),
+          throwsArgumentError,
+        );
+      });
+
+      test('Preserves product variants when deactivated', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final variantsBefore = await variantCount();
+
+        final result = await service.setProductStatus(
+          businessId: businessId,
+          productId: productId,
+          isActive: false,
+        );
+
+        final variantsAfter = await variantCount();
+
+        expect(result, isTrue);
+        expect(variantsAfter, variantsBefore);
+      });
+    });
+
     test('Retrieves product with category and multiple variants', () async {
       await createFixture();
 
