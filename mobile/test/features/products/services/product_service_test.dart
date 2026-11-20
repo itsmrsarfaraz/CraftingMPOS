@@ -1348,6 +1348,213 @@ void main() {
       });
     });
 
+    group('setVariantStatus', () {
+      test('Activates an inactive variant', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        await service.setVariantStatus(
+          businessId: businessId,
+          variantId: variant.id,
+          isActive: false,
+        );
+
+        final result = await service.setVariantStatus(
+          businessId: businessId,
+          variantId: variant.id,
+          isActive: true,
+        );
+
+        final updated = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variant.id))).getSingle();
+
+        expect(result, isTrue);
+        expect(updated.isActive, isTrue);
+        expect(updated.updatedAt.isAfter(variant.updatedAt), isTrue);
+      });
+
+      test('Deactivates an active variant', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.setVariantStatus(
+          businessId: businessId,
+          variantId: variant.id,
+          isActive: false,
+        );
+
+        final updated = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variant.id))).getSingle();
+
+        expect(result, isTrue);
+        expect(updated.isActive, isFalse);
+        expect(updated.updatedAt.isAfter(variant.updatedAt), isTrue);
+      });
+
+      test('Does not update timestamp when status is unchanged', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.setVariantStatus(
+          businessId: businessId,
+          variantId: variant.id,
+          isActive: true,
+        );
+
+        final unchanged = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variant.id))).getSingle();
+
+        expect(result, isTrue);
+        expect(unchanged.updatedAt, variant.updatedAt);
+      });
+
+      test('Returns false for an unknown variant', () async {
+        await createBusiness(businessId);
+
+        final result = await service.setVariantStatus(
+          businessId: businessId,
+          variantId: 'unknown-variant',
+          isActive: false,
+        );
+
+        expect(result, isFalse);
+      });
+
+      test('Does not modify another business variant', () async {
+        await createFixture();
+        await createBusiness(otherBusinessId);
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.setVariantStatus(
+          businessId: otherBusinessId,
+          variantId: variant.id,
+          isActive: false,
+        );
+
+        final unchanged = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(variant.id))).getSingle();
+
+        expect(result, isFalse);
+        expect(unchanged.isActive, isTrue);
+        expect(unchanged.updatedAt, variant.updatedAt);
+      });
+
+      test('Rejects empty business ID and variant ID', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final variant = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        await expectLater(
+          service.setVariantStatus(
+            businessId: ' ',
+            variantId: variant.id,
+            isActive: false,
+          ),
+          throwsArgumentError,
+        );
+
+        await expectLater(
+          service.setVariantStatus(
+            businessId: businessId,
+            variantId: ' ',
+            isActive: false,
+          ),
+          throwsArgumentError,
+        );
+      });
+
+      test('Preserves variant identity and product association', () async {
+        await createFixture();
+
+        final productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Test Product',
+          variantName: 'Standard',
+          costPrice: 5000,
+          sellingPrice: 7000,
+        );
+
+        final original = await (database.select(
+          database.productVariants,
+        )..where((table) => table.productId.equals(productId))).getSingle();
+
+        final result = await service.setVariantStatus(
+          businessId: businessId,
+          variantId: original.id,
+          isActive: false,
+        );
+
+        final updated = await (database.select(
+          database.productVariants,
+        )..where((table) => table.id.equals(original.id))).getSingle();
+
+        expect(result, isTrue);
+        expect(updated.id, original.id);
+        expect(updated.businessId, original.businessId);
+        expect(updated.productId, original.productId);
+        expect(updated.createdAt, original.createdAt);
+        expect(updated.isActive, isFalse);
+      });
+    });
+
     test('Retrieves product with category and multiple variants', () async {
       await createFixture();
 

@@ -577,6 +577,78 @@ class ProductService {
     return result;
   }
 
+  /// Activates or deactivates a product variant within its business.
+  ///
+  /// Returns false if the variant does not exist in the specified business.
+  /// If the variant already has the requested status, no update is performed.
+  Future<bool> setVariantStatus({
+    required String businessId,
+    required String variantId,
+    required bool isActive,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedVariantId = variantId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedVariantId.isEmpty) {
+      throw ArgumentError.value(
+        variantId,
+        'variantId',
+        'Variant ID cannot be empty.',
+      );
+    }
+
+    final result = await _database.transaction<bool>(() async {
+      final variant =
+          await (_database.select(_database.productVariants)..where(
+                (table) =>
+                    table.id.equals(normalizedVariantId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .getSingleOrNull();
+
+      if (variant == null) {
+        return false;
+      }
+
+      // Avoid unnecessary database updates when the status is unchanged.
+      if (variant.isActive == isActive) {
+        return true;
+      }
+
+      final currentTime = DateTime.now();
+      final minimumNextTime = variant.updatedAt.add(const Duration(seconds: 1));
+
+      final now = currentTime.isAfter(minimumNextTime)
+          ? currentTime
+          : minimumNextTime;
+
+      final updatedRows =
+          await (_database.update(_database.productVariants)..where(
+                (table) =>
+                    table.id.equals(normalizedVariantId) &
+                    table.businessId.equals(normalizedBusinessId),
+              ))
+              .write(
+                ProductVariantsCompanion(
+                  isActive: Value(isActive),
+                  updatedAt: Value(now),
+                ),
+              );
+
+      return updatedRows > 0;
+    });
+
+    return result;
+  }
+
   /// Retrieves a product with its category and all variants.
   ///
   /// Returns null if the product does not exist or belongs
