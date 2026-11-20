@@ -1723,6 +1723,148 @@ void main() {
       );
     });
 
+    group('getProductVariants', () {
+      late String productId;
+
+      setUp(() async {
+        await createFixture();
+
+        productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 10000,
+          sellingPrice: 15000,
+        );
+      });
+
+      test('Returns all variants sorted by name then ID', () async {
+        final zVariantId = await service.createVariant(
+          businessId: businessId,
+          productId: productId,
+          name: 'Zebra',
+          costPrice: 10000,
+          sellingPrice: 15000,
+        );
+
+        final aVariantId = await service.createVariant(
+          businessId: businessId,
+          productId: productId,
+          name: 'Alpha',
+          costPrice: 10000,
+          sellingPrice: 15000,
+        );
+
+        final variants = await service.getProductVariants(
+          businessId: businessId,
+          productId: productId,
+        );
+
+        expect(variants.map((variant) => variant.name).toList(), [
+          'Alpha',
+          'Standard',
+          'Zebra',
+        ]);
+
+        expect(variants.map((variant) => variant.id), [
+          aVariantId,
+          variants[1].id,
+          zVariantId,
+        ]);
+      });
+
+      test('Returns only active variants when requested', () async {
+        final inactiveVariantId = await service.createVariant(
+          businessId: businessId,
+          productId: productId,
+          name: 'Inactive',
+          costPrice: 10000,
+          sellingPrice: 15000,
+        );
+
+        await service.setVariantStatus(
+          businessId: businessId,
+          variantId: inactiveVariantId,
+          isActive: false,
+        );
+
+        final variants = await service.getProductVariants(
+          businessId: businessId,
+          productId: productId,
+          isActive: true,
+        );
+
+        expect(variants, hasLength(1));
+        expect(variants.first.name, 'Standard');
+      });
+
+      test('Returns only inactive variants when requested', () async {
+        final inactiveVariantId = await service.createVariant(
+          businessId: businessId,
+          productId: productId,
+          name: 'Inactive',
+          costPrice: 10000,
+          sellingPrice: 15000,
+        );
+
+        await service.setVariantStatus(
+          businessId: businessId,
+          variantId: inactiveVariantId,
+          isActive: false,
+        );
+
+        final variants = await service.getProductVariants(
+          businessId: businessId,
+          productId: productId,
+          isActive: false,
+        );
+
+        expect(variants, hasLength(1));
+        expect(variants.first.id, inactiveVariantId);
+      });
+
+      test('Returns an empty list for an unknown product', () async {
+        final variants = await service.getProductVariants(
+          businessId: businessId,
+          productId: 'unknown-product',
+        );
+
+        expect(variants, isEmpty);
+      });
+
+      test('Does not expose variants belonging to another business', () async {
+        await createBusiness(otherBusinessId);
+
+        final variants = await service.getProductVariants(
+          businessId: otherBusinessId,
+          productId: productId,
+        );
+
+        expect(variants, isEmpty);
+      });
+
+      test('Rejects empty business ID and product ID', () async {
+        await expectLater(
+          service.getProductVariants(businessId: ' ', productId: productId),
+          throwsArgumentError,
+        );
+
+        await expectLater(
+          service.getProductVariants(businessId: businessId, productId: ' '),
+          throwsArgumentError,
+        );
+      });
+
+      test('Returns an unmodifiable variants list', () async {
+        final variants = await service.getProductVariants(
+          businessId: businessId,
+          productId: productId,
+        );
+
+        expect(() => variants.add(variants.first), throwsUnsupportedError);
+      });
+    });
+
     test('Lists active products with their categories by default', () async {
       await createFixture();
 

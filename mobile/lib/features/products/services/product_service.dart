@@ -722,6 +722,57 @@ class ProductService {
     );
   }
 
+  /// Retrieves variants belonging to a specific product and business.
+  ///
+  /// Set [isActive] to true or false to filter by status.
+  /// Pass null (the default) to include all variants.
+  ///
+  /// Returns an empty unmodifiable list if no matching variants exist.
+  Future<List<ProductVariant>> getProductVariants({
+    required String businessId,
+    required String productId,
+    bool? isActive,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedProductId = productId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedProductId.isEmpty) {
+      throw ArgumentError.value(
+        productId,
+        'productId',
+        'Product ID cannot be empty.',
+      );
+    }
+
+    final query = _database.select(_database.productVariants)
+      ..where(
+        (table) =>
+            table.businessId.equals(normalizedBusinessId) &
+            table.productId.equals(normalizedProductId),
+      );
+
+    if (isActive != null) {
+      query.where((table) => table.isActive.equals(isActive));
+    }
+
+    query.orderBy([
+      (table) => OrderingTerm.asc(table.name),
+      (table) => OrderingTerm.asc(table.id),
+    ]);
+
+    final variants = await query.get();
+
+    return List.unmodifiable(variants);
+  }
+
   /// Retrieves a paginated list of products for a business.
   ///
   /// Searches product names and active variant SKUs.
