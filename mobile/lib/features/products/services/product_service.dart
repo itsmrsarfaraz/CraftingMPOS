@@ -722,6 +722,46 @@ class ProductService {
     );
   }
 
+  /// Retrieves one variant belonging to a specific business.
+  ///
+  /// Inactive variants are included.
+  ///
+  /// Returns null if the variant does not exist or does not
+  /// belong to the specified business.
+  Future<ProductVariant?> getVariantDetails({
+    required String businessId,
+    required String variantId,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedVariantId = variantId.trim();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError.value(
+        businessId,
+        'businessId',
+        'Business ID cannot be empty.',
+      );
+    }
+
+    if (normalizedVariantId.isEmpty) {
+      throw ArgumentError.value(
+        variantId,
+        'variantId',
+        'Variant ID cannot be empty.',
+      );
+    }
+
+    final variant =
+        await (_database.select(_database.productVariants)..where(
+              (table) =>
+                  table.businessId.equals(normalizedBusinessId) &
+                  table.id.equals(normalizedVariantId),
+            ))
+            .getSingleOrNull();
+
+    return variant;
+  }
+
   /// Retrieves variants belonging to a specific product and business.
   ///
   /// Set [isActive] to true or false to filter by status.

@@ -1865,6 +1865,106 @@ void main() {
       });
     });
 
+    group('getVariantDetails', () {
+      late String productId;
+      late String variantId;
+
+      setUp(() async {
+        await createFixture();
+
+        productId = await service.createProduct(
+          businessId: businessId,
+          name: 'Notebook',
+          variantName: 'Standard',
+          costPrice: 10000,
+          sellingPrice: 15000,
+        );
+
+        final variants = await service.getProductVariants(
+          businessId: businessId,
+          productId: productId,
+        );
+
+        variantId = variants.first.id;
+      });
+
+      test('Retrieves the correct variant with all fields', () async {
+        final variant = await service.getVariantDetails(
+          businessId: businessId,
+          variantId: variantId,
+        );
+
+        expect(variant, isNotNull);
+        expect(variant!.id, variantId);
+        expect(variant.businessId, businessId);
+        expect(variant.productId, productId);
+        expect(variant.name, 'Standard');
+        expect(variant.costPrice, 10000);
+        expect(variant.sellingPrice, 15000);
+        expect(variant.unit, 'piece');
+        expect(variant.isActive, isTrue);
+        expect(variant.trackStock, isTrue);
+      });
+
+      test('Retrieves inactive variants', () async {
+        await service.setVariantStatus(
+          businessId: businessId,
+          variantId: variantId,
+          isActive: false,
+        );
+
+        final variant = await service.getVariantDetails(
+          businessId: businessId,
+          variantId: variantId,
+        );
+
+        expect(variant, isNotNull);
+        expect(variant!.isActive, isFalse);
+      });
+
+      test('Returns null for an unknown variant', () async {
+        final variant = await service.getVariantDetails(
+          businessId: businessId,
+          variantId: 'unknown-variant',
+        );
+
+        expect(variant, isNull);
+      });
+
+      test('Does not expose another business variant', () async {
+        await createBusiness(otherBusinessId);
+
+        final variant = await service.getVariantDetails(
+          businessId: otherBusinessId,
+          variantId: variantId,
+        );
+
+        expect(variant, isNull);
+      });
+
+      test('Rejects empty business ID and variant ID', () async {
+        await expectLater(
+          service.getVariantDetails(businessId: ' ', variantId: variantId),
+          throwsArgumentError,
+        );
+
+        await expectLater(
+          service.getVariantDetails(businessId: businessId, variantId: ' '),
+          throwsArgumentError,
+        );
+      });
+
+      test('Trims business ID and variant ID', () async {
+        final variant = await service.getVariantDetails(
+          businessId: ' $businessId ',
+          variantId: ' $variantId ',
+        );
+
+        expect(variant, isNotNull);
+        expect(variant!.id, variantId);
+      });
+    });
+
     test('Lists active products with their categories by default', () async {
       await createFixture();
 
