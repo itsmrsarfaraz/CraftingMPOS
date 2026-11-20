@@ -904,5 +904,259 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test('updates a code successfully', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final codeId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'OLD-CODE-001',
+        codeType: 'CODE128',
+        isPrimary: true,
+      );
+
+      final original = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'OLD-CODE-001',
+      );
+
+      final result = await codeService.updateCode(
+        businessId: businessId,
+        codeId: codeId,
+        code: 'NEW-CODE-001',
+        codeType: 'qr',
+      );
+
+      final updated = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'NEW-CODE-001',
+      );
+
+      expect(result, isTrue);
+      expect(updated, isNotNull);
+      expect(updated!.id, codeId);
+      expect(updated.businessId, businessId);
+      expect(updated.variantId, variant.id);
+      expect(updated.code, 'NEW-CODE-001');
+      expect(updated.codeType, 'QR');
+      expect(updated.isPrimary, isTrue);
+      expect(updated.createdAt, original!.createdAt);
+
+      expect(
+        await codeService.getCodeByValue(
+          businessId: businessId,
+          code: 'OLD-CODE-001',
+        ),
+        isNull,
+      );
+    });
+
+    test('trims the new code and preserves code type when omitted', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final codeId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'ORIGINAL-001',
+        codeType: 'QR',
+      );
+
+      final result = await codeService.updateCode(
+        businessId: ' $businessId ',
+        codeId: ' $codeId ',
+        code: '  UPDATED-001  ',
+      );
+
+      final updated = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'UPDATED-001',
+      );
+
+      expect(result, isTrue);
+      expect(updated, isNotNull);
+      expect(updated!.code, 'UPDATED-001');
+      expect(updated.codeType, 'QR');
+    });
+
+    test('returns false when updating a missing code', () async {
+      await createFixture();
+
+      final result = await codeService.updateCode(
+        businessId: businessId,
+        codeId: 'missing-code',
+        code: 'UPDATED-001',
+      );
+
+      expect(result, isFalse);
+    });
+
+    test('does not update a code belonging to another business', () async {
+      await createFixture();
+      final otherProductId = await createOtherBusinessVariant();
+
+      final otherVariant = (await productService.getProductVariants(
+        businessId: otherBusinessId,
+        productId: otherProductId,
+      )).single;
+
+      final foreignCodeId = await codeService.createCode(
+        businessId: otherBusinessId,
+        variantId: otherVariant.id,
+        code: 'FOREIGN-ORIGINAL',
+      );
+
+      final result = await codeService.updateCode(
+        businessId: businessId,
+        codeId: foreignCodeId,
+        code: 'FOREIGN-UPDATED',
+      );
+
+      final foreignCode = await codeService.getCodeByValue(
+        businessId: otherBusinessId,
+        code: 'FOREIGN-ORIGINAL',
+      );
+
+      expect(result, isFalse);
+      expect(foreignCode, isNotNull);
+      expect(foreignCode!.code, 'FOREIGN-ORIGINAL');
+    });
+
+    test('rejects a duplicate code within the same business', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final firstId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'EXISTING-001',
+      );
+
+      final secondId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'TO-BE-UPDATED',
+      );
+
+      await expectLater(
+        codeService.updateCode(
+          businessId: businessId,
+          codeId: secondId,
+          code: 'EXISTING-001',
+        ),
+        throwsStateError,
+      );
+
+      final first = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'EXISTING-001',
+      );
+
+      final second = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'TO-BE-UPDATED',
+      );
+
+      expect(first!.id, firstId);
+      expect(second!.id, secondId);
+      expect(second.code, 'TO-BE-UPDATED');
+    });
+
+    test('allows updating a code without changing its value', () async {
+      final productId = await createFixture();
+      final variant = (await productService.getProductVariants(
+        businessId: businessId,
+        productId: productId,
+      )).single;
+
+      final codeId = await codeService.createCode(
+        businessId: businessId,
+        variantId: variant.id,
+        code: 'UNCHANGED-001',
+        codeType: 'CODE128',
+      );
+
+      final result = await codeService.updateCode(
+        businessId: businessId,
+        codeId: codeId,
+        code: 'UNCHANGED-001',
+        codeType: 'QR',
+      );
+
+      final updated = await codeService.getCodeByValue(
+        businessId: businessId,
+        code: 'UNCHANGED-001',
+      );
+
+      expect(result, isTrue);
+      expect(updated!.codeType, 'QR');
+    });
+
+    test('rejects an empty business ID when updating a code', () async {
+      expect(
+        () => codeService.updateCode(
+          businessId: ' ',
+          codeId: 'some-code',
+          code: 'UPDATED-001',
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects an empty code ID when updating a code', () async {
+      expect(
+        () => codeService.updateCode(
+          businessId: businessId,
+          codeId: ' ',
+          code: 'UPDATED-001',
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects an empty code when updating a code', () async {
+      expect(
+        () => codeService.updateCode(
+          businessId: businessId,
+          codeId: 'some-code',
+          code: ' ',
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects a code longer than 255 characters when updating', () async {
+      expect(
+        () => codeService.updateCode(
+          businessId: businessId,
+          codeId: 'some-code',
+          code: 'A' * 256,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects an empty code type when updating a code', () async {
+      expect(
+        () => codeService.updateCode(
+          businessId: businessId,
+          codeId: 'some-code',
+          code: 'UPDATED-001',
+          codeType: ' ',
+        ),
+        throwsArgumentError,
+      );
+    });
   });
 }

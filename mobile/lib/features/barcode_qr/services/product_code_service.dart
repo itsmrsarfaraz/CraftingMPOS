@@ -219,6 +219,78 @@ class ProductCodeService {
     });
   }
 
+  Future<bool> updateCode({
+    required String businessId,
+    required String codeId,
+    required String code,
+    String? codeType,
+  }) async {
+    final normalizedBusinessId = businessId.trim();
+    final normalizedCodeId = codeId.trim();
+    final normalizedCode = code.trim();
+    final normalizedCodeType = codeType?.trim().toUpperCase();
+
+    if (normalizedBusinessId.isEmpty) {
+      throw ArgumentError('Business ID cannot be empty.');
+    }
+
+    if (normalizedCodeId.isEmpty) {
+      throw ArgumentError('Code ID cannot be empty.');
+    }
+
+    if (normalizedCode.isEmpty || normalizedCode.length > 255) {
+      throw ArgumentError('Code must contain between 1 and 255 characters.');
+    }
+
+    if (normalizedCodeType != null && normalizedCodeType.isEmpty) {
+      throw ArgumentError('Code type cannot be empty.');
+    }
+
+    return _database.transaction<bool>(() async {
+      final existingCode =
+          await (_database.select(_database.productCodes)..where(
+                (table) =>
+                    table.businessId.equals(normalizedBusinessId) &
+                    table.id.equals(normalizedCodeId),
+              ))
+              .getSingleOrNull();
+
+      if (existingCode == null) {
+        return false;
+      }
+
+      final duplicateCode =
+          await (_database.select(_database.productCodes)..where(
+                (table) =>
+                    table.businessId.equals(normalizedBusinessId) &
+                    table.code.equals(normalizedCode) &
+                    table.id.equals(normalizedCodeId).not(),
+              ))
+              .getSingleOrNull();
+
+      if (duplicateCode != null) {
+        throw StateError('This code is already registered in this business.');
+      }
+
+      final updatedRows =
+          await (_database.update(_database.productCodes)..where(
+                (table) =>
+                    table.businessId.equals(normalizedBusinessId) &
+                    table.id.equals(normalizedCodeId),
+              ))
+              .write(
+                ProductCodesCompanion(
+                  code: Value(normalizedCode),
+                  codeType: normalizedCodeType == null
+                      ? const Value.absent()
+                      : Value(normalizedCodeType),
+                ),
+              );
+
+      return updatedRows > 0;
+    });
+  }
+
   Future<bool> deleteCode({
     required String businessId,
     required String codeId,
