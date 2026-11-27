@@ -37,7 +37,8 @@ dependencies:
   drift: ^2.35.4
   drift_flutter: ^0.3.1
   barcode_widget: 2.0.4
-  print_bluetooth_thermal: 1.2.5
+  print_bluetooth_thermal:
+    path: packages/print_bluetooth_thermal
   esc_pos_utils_plus: 2.0.4
   image: 4.13.1
   barcode: 2.2.9
