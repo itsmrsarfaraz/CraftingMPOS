@@ -1,12 +1,19 @@
-
 import 'dart:async';
+
 import 'package:crafting_mpos/features/printer/models/printer_device.dart';
 import 'package:crafting_mpos/features/printer/repositories/printer_repository.dart';
 
 class FakePrinterRepository implements PrinterRepository {
-
   Completer<void>? connectGate;
   Completer<void>? disconnectGate;
+
+  Completer<void>? writeGate;
+
+  bool writeResult = true;
+
+  Object? writeError;
+
+  final List<List<int>> writtenJobs = [];
 
   bool permissionGranted = true;
   bool bluetoothEnabled = true;
@@ -97,7 +104,18 @@ class FakePrinterRepository implements PrinterRepository {
   Future<bool> write(List<int> bytes) async {
     writeCalls++;
     lastWrittenBytes = List<int>.from(bytes);
-    return true;
+
+    if (writeGate != null) {
+      await writeGate!.future;
+    }
+
+    if (writeError != null) {
+      throw writeError!;
+    }
+
+    writtenJobs.add(List<int>.from(bytes));
+
+    return writeResult;
   }
 
   @override

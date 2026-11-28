@@ -1,5 +1,5 @@
-
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:crafting_mpos/features/printer/models/printer_connection_state.dart';
 import 'package:crafting_mpos/features/printer/models/printer_device.dart';
@@ -26,12 +26,14 @@ void main() {
   });
 
   group('prepare', () {
-    test('returns true when permission is granted and Bluetooth is enabled',
-        () async {
-      expect(await service.prepare(), isTrue);
-      expect(repository.permissionCalls, 1);
-      expect(repository.bluetoothEnabledCalls, 1);
-    });
+    test(
+      'returns true when permission is granted and Bluetooth is enabled',
+      () async {
+        expect(await service.prepare(), isTrue);
+        expect(repository.permissionCalls, 1);
+        expect(repository.bluetoothEnabledCalls, 1);
+      },
+    );
 
     test('returns false when permission is denied', () async {
       repository.permissionGranted = false;
@@ -47,23 +49,18 @@ void main() {
     });
 
     test('propagates permission exceptions', () async {
-  repository.permissionError = Exception('Permission unavailable');
+      repository.permissionError = Exception('Permission unavailable');
 
-  await expectLater(
-    service.prepare(),
-    throwsA(isA<Exception>()),
-  );
-});
+      await expectLater(service.prepare(), throwsA(isA<Exception>()));
+    });
 
-test('propagates Bluetooth status exceptions', () async {
-  repository.bluetoothEnabledError =
-      Exception('Bluetooth status unavailable');
+    test('propagates Bluetooth status exceptions', () async {
+      repository.bluetoothEnabledError = Exception(
+        'Bluetooth status unavailable',
+      );
 
-  await expectLater(
-    service.prepare(),
-    throwsA(isA<Exception>()),
-  );
-});
+      await expectLater(service.prepare(), throwsA(isA<Exception>()));
+    });
   });
 
   group('getPairedDevices', () {
@@ -89,14 +86,12 @@ test('propagates Bluetooth status exceptions', () async {
     });
 
     test('propagates paired-device retrieval exceptions', () async {
-  repository.pairedDevicesError =
-      Exception('Unable to retrieve paired devices');
+      repository.pairedDevicesError = Exception(
+        'Unable to retrieve paired devices',
+      );
 
-  await expectLater(
-    service.getPairedDevices(),
-    throwsA(isA<Exception>()),
-  );
-});
+      await expectLater(service.getPairedDevices(), throwsA(isA<Exception>()));
+    });
   });
 
   group('connect', () {
@@ -111,13 +106,10 @@ test('propagates Bluetooth status exceptions', () async {
 
       await Future<void>.delayed(Duration.zero);
 
-      expect(
-        states,
-        [
-          PrinterConnectionState.connecting,
-          PrinterConnectionState.connected,
-        ],
-      );
+      expect(states, [
+        PrinterConnectionState.connecting,
+        PrinterConnectionState.connected,
+      ]);
 
       await subscription.cancel();
     });
@@ -170,48 +162,50 @@ test('propagates Bluetooth status exceptions', () async {
       expect(service.state, PrinterConnectionState.connected);
     });
 
-    test('does not connect another printer if previous disconnect fails',
-        () async {
-      final anotherPrinter = PrinterDevice(
-        name: 'Second Printer',
-        address: 'AA:BB:CC:DD:EE:FF',
-      );
+    test(
+      'does not connect another printer if previous disconnect fails',
+      () async {
+        final anotherPrinter = PrinterDevice(
+          name: 'Second Printer',
+          address: 'AA:BB:CC:DD:EE:FF',
+        );
 
-      expect(await service.connect(printer), isTrue);
+        expect(await service.connect(printer), isTrue);
 
-      repository.disconnectResult = false;
+        repository.disconnectResult = false;
 
-      expect(await service.connect(anotherPrinter), isFalse);
-      expect(repository.connectCalls, 1);
-      expect(service.state, PrinterConnectionState.error);
-      expect(service.connectedDevice?.address, printer.address);
-    });
+        expect(await service.connect(anotherPrinter), isFalse);
+        expect(repository.connectCalls, 1);
+        expect(service.state, PrinterConnectionState.error);
+        expect(service.connectedDevice?.address, printer.address);
+      },
+    );
 
     test('sets error state and propagates connection exceptions', () async {
       repository.connectError = Exception('Connection failed');
-      await expectLater(
-        service.connect(printer),
-        throwsA(isA<Exception>()),
-      );
+      await expectLater(service.connect(printer), throwsA(isA<Exception>()));
       expect(service.state, PrinterConnectionState.error);
       expect(service.connectedDevice, isNull);
     });
 
-    test('sets error state and propagates previous disconnect exceptions',() async {
-      final anotherPrinter = PrinterDevice(
-        name: 'Second Printer',
-        address: 'AA:BB:CC:DD:EE:FF',
-      );
-      expect(await service.connect(printer), isTrue);
-      repository.disconnectError = Exception('Disconnection failed');
-      await expectLater(
-        service.connect(anotherPrinter),
-        throwsA(isA<Exception>()),
-      );
-      expect(service.state, PrinterConnectionState.error);
-      expect(service.connectedDevice?.address, printer.address);
-      expect(repository.connectCalls, 1);
-    });
+    test(
+      'sets error state and propagates previous disconnect exceptions',
+      () async {
+        final anotherPrinter = PrinterDevice(
+          name: 'Second Printer',
+          address: 'AA:BB:CC:DD:EE:FF',
+        );
+        expect(await service.connect(printer), isTrue);
+        repository.disconnectError = Exception('Disconnection failed');
+        await expectLater(
+          service.connect(anotherPrinter),
+          throwsA(isA<Exception>()),
+        );
+        expect(service.state, PrinterConnectionState.error);
+        expect(service.connectedDevice?.address, printer.address);
+        expect(repository.connectCalls, 1);
+      },
+    );
 
     test('serializes concurrent connection requests', () async {
       final anotherPrinter = PrinterDevice(
@@ -258,10 +252,7 @@ test('propagates Bluetooth status exceptions', () async {
 
       gate.complete();
 
-      await expectLater(
-        failedConnection,
-        throwsA(isA<Exception>()),
-      );
+      await expectLater(failedConnection, throwsA(isA<Exception>()));
 
       expect(await queuedDisconnection, isTrue);
 
@@ -285,6 +276,125 @@ test('propagates Bluetooth status exceptions', () async {
       expect(service.connectedDevice?.address, printer.address);
       expect(repository.disconnectCalls, 0);
       expect(repository.connectCalls, 1);
+    });
+  });
+
+  group('printBytes', () {
+    test('returns false when no printer is connected', () async {
+      expect(await service.printBytes([0x1B, 0x40]), isFalse);
+
+      expect(repository.connectionStatusCalls, 0);
+      expect(repository.writeCalls, 0);
+    });
+
+    test('rejects empty print data', () async {
+      await expectLater(service.printBytes([]), throwsArgumentError);
+
+      expect(repository.writeCalls, 0);
+    });
+
+    test('prints bytes successfully when connected', () async {
+      final bytes = [0x1B, 0x40, 0x1D, 0x56, 0x00];
+
+      expect(await service.connect(printer), isTrue);
+      expect(await service.printBytes(bytes), isTrue);
+
+      expect(repository.connectionStatusCalls, 1);
+      expect(repository.writeCalls, 1);
+      expect(repository.lastWrittenBytes, bytes);
+      expect(repository.writtenJobs, [bytes]);
+      expect(service.state, PrinterConnectionState.connected);
+    });
+
+    test('returns false when repository reports disconnected', () async {
+      expect(await service.connect(printer), isTrue);
+
+      repository.connected = false;
+
+      expect(await service.printBytes([0x1B, 0x40]), isFalse);
+
+      expect(repository.writeCalls, 0);
+      expect(service.state, PrinterConnectionState.error);
+      expect(service.connectedDevice, isNull);
+    });
+
+    test('returns false when Bluetooth write fails', () async {
+      expect(await service.connect(printer), isTrue);
+
+      repository.writeResult = false;
+
+      expect(await service.printBytes([0x1B, 0x40]), isFalse);
+
+      expect(service.state, PrinterConnectionState.connected);
+      expect(service.connectedDevice, printer);
+    });
+
+    test('propagates write exceptions without breaking the queue', () async {
+      expect(await service.connect(printer), isTrue);
+
+      repository.writeError = Exception('Printer write failed');
+
+      await expectLater(
+        service.printBytes([0x1B, 0x40]),
+        throwsA(isA<Exception>()),
+      );
+
+      repository.writeError = null;
+
+      expect(await service.printBytes([0x1B, 0x40]), isTrue);
+      expect(repository.writeCalls, 2);
+      expect(service.state, PrinterConnectionState.connected);
+    });
+
+    test('serializes concurrent print jobs', () async {
+      expect(await service.connect(printer), isTrue);
+
+      final gate = Completer<void>();
+      repository.writeGate = gate;
+
+      final firstJob = service.printBytes([0x01, 0x02]);
+
+      await Future<void>.delayed(Duration.zero);
+
+      final secondJob = service.printBytes([0x03, 0x04]);
+
+      expect(repository.writeCalls, 1);
+
+      gate.complete();
+
+      expect(await firstJob, isTrue);
+      expect(await secondJob, isTrue);
+
+      expect(repository.writeCalls, 2);
+      expect(repository.writtenJobs, [
+        [0x01, 0x02],
+        [0x03, 0x04],
+      ]);
+    });
+
+    test('disconnect waits until an active print job finishes', () async {
+      expect(await service.connect(printer), isTrue);
+
+      final gate = Completer<void>();
+      repository.writeGate = gate;
+
+      final printJob = service.printBytes([0x01, 0x02]);
+
+      await Future<void>.delayed(Duration.zero);
+
+      final disconnection = service.disconnect();
+
+      expect(repository.writeCalls, 1);
+      expect(repository.disconnectCalls, 0);
+
+      gate.complete();
+
+      expect(await printJob, isTrue);
+      expect(await disconnection, isTrue);
+
+      expect(repository.disconnectCalls, 1);
+      expect(service.state, PrinterConnectionState.disconnected);
+      expect(service.connectedDevice, isNull);
     });
   });
 
@@ -314,18 +424,15 @@ test('propagates Bluetooth status exceptions', () async {
     });
 
     test('sets error state and propagates disconnection exceptions', () async {
-  expect(await service.connect(printer), isTrue);
+      expect(await service.connect(printer), isTrue);
 
-  repository.disconnectError = Exception('Disconnection failed');
+      repository.disconnectError = Exception('Disconnection failed');
 
-  await expectLater(
-    service.disconnect(),
-    throwsA(isA<Exception>()),
-  );
+      await expectLater(service.disconnect(), throwsA(isA<Exception>()));
 
-  expect(service.state, PrinterConnectionState.error);
-  expect(service.connectedDevice?.address, printer.address);
-});
+      expect(service.state, PrinterConnectionState.error);
+      expect(service.connectedDevice?.address, printer.address);
+    });
   });
 
   group('dispose', () {
@@ -335,15 +442,9 @@ test('propagates Bluetooth status exceptions', () async {
       await expectLater(service.prepare(), throwsStateError);
       await expectLater(service.getPairedDevices(), throwsStateError);
 
-      expect(
-        () => service.connect(printer),
-        throwsStateError,
-      );
+      expect(() => service.connect(printer), throwsStateError);
 
-      expect(
-        () => service.disconnect(),
-        throwsStateError,
-      );
+      expect(() => service.disconnect(), throwsStateError);
     });
 
     test('can be disposed more than once', () async {
@@ -369,10 +470,7 @@ test('propagates Bluetooth status exceptions', () async {
 
       expect(await connection, isTrue);
 
-      await Future.wait([
-        firstDisposal,
-        secondDisposal,
-      ]);
+      await Future.wait([firstDisposal, secondDisposal]);
     });
   });
 }

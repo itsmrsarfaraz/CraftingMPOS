@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import '../models/printer_connection_state.dart';
@@ -6,9 +5,7 @@ import '../models/printer_device.dart';
 import '../repositories/printer_repository.dart';
 
 class PrinterService {
-  PrinterService({
-    required this._repository,
-  });
+  PrinterService({required this._repository});
 
   final PrinterRepository _repository;
 
@@ -26,8 +23,7 @@ class PrinterService {
 
   PrinterDevice? get connectedDevice => _connectedDevice;
 
-  Stream<PrinterConnectionState> get stateChanges =>
-      _stateController.stream;
+  Stream<PrinterConnectionState> get stateChanges => _stateController.stream;
 
   /// Checks Bluetooth permission and whether Bluetooth is enabled.
   Future<bool> prepare() async {
@@ -102,6 +98,36 @@ class PrinterService {
         _setState(PrinterConnectionState.error);
         rethrow;
       }
+    });
+  }
+
+  /// Sends ESC/POS bytes to the currently connected printer.
+  ///
+  /// Print jobs are serialized with connection operations.
+  Future<bool> printBytes(List<int> bytes) {
+    return _enqueue(() async {
+      if (bytes.isEmpty) {
+        throw ArgumentError.value(
+          bytes,
+          'bytes',
+          'Print data cannot be empty.',
+        );
+      }
+
+      if (_state != PrinterConnectionState.connected ||
+          _connectedDevice == null) {
+        return false;
+      }
+
+      final connected = await _repository.isConnected();
+
+      if (!connected) {
+        _connectedDevice = null;
+        _setState(PrinterConnectionState.error);
+        return false;
+      }
+
+      return await _repository.write(List<int>.unmodifiable(bytes));
     });
   }
 
